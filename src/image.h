@@ -6,13 +6,13 @@
 #include <sstream>
 #include <string>
 
-using byte = unsigned char;
+#include "color.h"
 
-class Image {
+class PPMImage {
   public:
-	Image() {}
+	PPMImage() {}
 
-	Image(const std::string& filename) {
+	PPMImage(const std::string& filename) {
 		try {
 			if (filename.substr(filename.length() - 4) != ".ppm") throw "Can only load .ppm images";
 
@@ -27,18 +27,29 @@ class Image {
 		}
 	}
 
-	~Image() { delete[] bdata; }
+	~PPMImage() { delete[] bdata; }
 
 	int width() const { return bdata == nullptr ? 0 : image_width; }
 	int height() const { return bdata == nullptr ? 0 : image_height; }
 
-	const byte* pixel_data(int x, int y) const {
-		static byte magenta[] = { 255, 0, 255 };
-		if (bdata == nullptr) return magenta; // return magenta as fallback
-
+	Color pixel(int x, int y) const {
+		if (bdata == nullptr) return Color(1, 0, 1); // return magenta as fallback
 		x = clamp(x, 0, image_width);
 		y = clamp(y, 0, image_height);
-		return bdata + y * bytes_per_scanline + x * bytes_per_pixel;
+		return Color(bdata + y * bytes_per_scanline + x * bytes_per_pixel);
+	}
+
+	static void write_header(std::ostream& out, int width, int height, bool binary_enc = false) {
+		out << (binary_enc ? "P6\n" : "P3\n") << width << ' ' << height << "\n255\n";
+	}
+
+	static void write_color(std::ostream& out, const Color& col, double gamma, bool binary_enc = false) {
+		const byte *rgb = col.to_gamma(gamma).to_bytes();
+		if (binary_enc) out.write((const char*) rgb, 3);
+		else {
+			// TODO does the flush here slow things down? benchmark this...
+			out << (int) rgb[0] << ' ' << (int) rgb[1] << ' ' << (int) rgb[2] << '\n' << std::flush;
+		}
 	}
 
   private:

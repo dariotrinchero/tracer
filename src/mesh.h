@@ -25,11 +25,11 @@ namespace {
 		float verts[3][3];
 		unsigned short att;
 	};
+
+	// size of facet in bytes (differs from sizeof(STLFacet) due to padding)
+	constexpr size_t facet_size = sizeof(float) * 3 * 4 + sizeof(unsigned short);
 }
 
-constexpr size_t facet_size = sizeof(float) * 3 * 4 + sizeof(unsigned short);
-
-// TODO unify common logic with image.h in something like a File class
 class Mesh {
   public:
 	Mesh(const std::string& filename, shared_ptr<Material> mat) {

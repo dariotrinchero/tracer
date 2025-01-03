@@ -70,17 +70,11 @@ class ImageTexture : public Texture {
 		v = 1 - uv_range.clamp(v); // flip v to img coords
 
 		int i = int(u * img.width()), j = int(v * img.height());
-		auto pixel = img.pixel_data(i, j);
-		return Color(
-			// convert from gamma to linear, as color.h expects linear space colors
-			std::pow(pixel[0] / 255.0, gamma),
-			std::pow(pixel[1] / 255.0, gamma),
-			std::pow(pixel[2] / 255.0, gamma)
-		);
+		return img.pixel(i, j).to_linear(gamma); // scattering attenuation needs linear color
 	}
 
   private:
-	Image img;
+	PPMImage img;
 	double gamma;
 };
 

@@ -10,6 +10,7 @@
 #include "random.h"
 #include "bvh.h"
 #include "threads.h"
+#include "image.h"
 
 #define PI 3.1415926535897932385
 
@@ -53,9 +54,10 @@ class Camera {
 		int samples_per_thread = samples_per_pixel / pool.num_threads();
 		int sample_remainder = samples_per_pixel % pool.num_threads();
 
-		if (start_pixel != 0) std::clog << "Resuming render from pixel: " << start_pixel << '\n';
-		else { // output .ppm file header
-			std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+		if (start_pixel != 0) {
+			std::clog << "Resuming render from pixel: " << start_pixel << '\n';
+		} else { // output .ppm file header
+			PPMImage::write_header(std::cout, image_width, image_height);
 		}
 
 		for (int j = start_pixel / image_width; j < image_height; j++) {
@@ -74,7 +76,7 @@ class Camera {
 				// join threads & aggregate results
 				Color pixel_col = black;
 				for (auto& future : futures) pixel_col += future.get();
-				write_color(std::cout, pixel_col / samples_per_pixel, gamma);
+				PPMImage::write_color(std::cout, pixel_col / samples_per_pixel, gamma);
 			}
 		}
 

@@ -9,28 +9,49 @@
 
 #define RGB_MAX 255.999
 
-using Color = Vec3;
+using byte = unsigned char;
 
-inline double linear_to_gamma(double linear_component, double gamma) {
-	if (linear_component <= 0) return 0;
-	return std::pow(linear_component, 1.0 / gamma);
-}
+class Color : public Triple<double, Color> {
+  public:
+	Color() : Triple(0, 0, 0) {}
 
-inline Color linear_to_gamma(const Color& linear_color, double gamma) {
-	return Color(linear_to_gamma(linear_color.x(), gamma),
-		linear_to_gamma(linear_color.y(), gamma),
-		linear_to_gamma(linear_color.z(), gamma));
-}
+	Color(double r, double g, double b) : Triple(r, g, b) {}
 
-void write_color(std::ostream& out, const Color& pixel_color, double gamma) {
-	// scale from [0,1] to [0,255]
-	Color col = linear_to_gamma(pixel_color, gamma);
-	int r = int(RGB_MAX * Interval::unit.clamp(col.x()));
-	int g = int(RGB_MAX * Interval::unit.clamp(col.y()));
-	int b = int(RGB_MAX * Interval::unit.clamp(col.z()));
+	explicit Color(int hex)
+		: Triple(((hex >> 16) & 0xFF) / 255.0, ((hex >> 8) & 0xFF) / 255.0, (hex & 0xFF) / 255.0) {}
 
-	// TODO does the flush here slow things down? benchmark this...
-	out << r << ' ' << g << ' ' << b << '\n' << std::flush;
+	Color(const byte bytes[3]) : Triple(bytes[0] / 255.0, bytes[1] / 255.0, bytes[2] / 255.0) {}
+
+	Color to_gamma(double gamma = 2.0) const {
+		return Color(linear_to_gamma(e[0], gamma),
+			linear_to_gamma(e[1], gamma),
+			linear_to_gamma(e[2], gamma));
+	}
+
+	Color to_linear(double gamma = 2.0) const {
+		return Color(gamma_to_linear(e[0], gamma),
+			gamma_to_linear(e[1], gamma),
+			gamma_to_linear(e[2], gamma));
+	}
+
+	const byte* to_bytes() const {
+		static byte bytes[] = { byte(RGB_MAX * e[0]), byte(RGB_MAX * e[1]), byte(RGB_MAX * e[2]) };
+		return bytes;
+	}
+
+  private:
+	static inline double linear_to_gamma(double linear_component, double gamma) {
+		return std::pow(Interval::unit.clamp(linear_component), 1.0 / gamma);
+	}
+
+	static inline double gamma_to_linear(double gamma_component, double gamma) {
+		return std::pow(Interval::unit.clamp(gamma_component), gamma);
+	}
+};
+
+// point-wise product used for scattered ray attenuation
+inline Color operator*(const Color& col1, const Color& col2) {
+    return Color(col1.e[0] * col2.e[0], col1.e[1] * col2.e[1], col1.e[2] * col2.e[2]);
 }
 
 const Color white(1, 1, 1);
