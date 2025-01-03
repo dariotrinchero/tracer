@@ -1,4 +1,5 @@
 #include <stdexcept>
+#include <signal.h>
 
 #include "hittable.h"
 #include "material.h"
@@ -17,7 +18,7 @@ void build_scene(HittableList&, Camera&) {}
 #endif
 
 int main(int argc, char* argv[]) {
-	// default camera parameters
+	// set up default camera
 	Camera cam;
 	cam.aspect_ratio = 16.0 / 9.0;
 	cam.vert_fov = 20;
@@ -37,6 +38,18 @@ int main(int argc, char* argv[]) {
 	cam.samples_per_pixel = 500;
 	cam.max_depth = 50;
 #endif
+
+	// register interrupt handler
+	struct sigaction sig_int_handler;
+	sig_int_handler.sa_handler = [](int) {
+		std::cout.flush();
+		std::clog << "\n\033[93mResume interrupted render:\n"
+			<< "> \033[2m./tracer $(($(wc -l < render.ppm) - 3)) >> render.ppm\n";
+		exit(EXIT_SUCCESS);
+	};
+	sigemptyset(&sig_int_handler.sa_mask);
+	sig_int_handler.sa_flags = 0;
+	sigaction(SIGINT, &sig_int_handler, NULL);
 
 	// build scene & render
 	HittableList scene;

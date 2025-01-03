@@ -18,47 +18,45 @@
 #define DEBUG_STREAM if constexpr (false) std::clog
 #endif
 
-// data per triangle in STL file
-struct STLFacet {
-	float normal[3];
-	float verts[3][3];
-	unsigned short att;
-};
+namespace {
+	// STL format for each facet
+	struct STLFacet {
+		float normal[3];
+		float verts[3][3];
+		unsigned short att;
+	};
+}
 
 constexpr size_t facet_size = sizeof(float) * 3 * 4 + sizeof(unsigned short);
 
 // TODO unify common logic with image.h in something like a File class
 class Mesh {
   public:
-	Mesh(const std::string& filename, shared_ptr<Material> mat) : mat(mat) {
+	Mesh(const std::string& filename, shared_ptr<Material> mat) {
 		try {
 			if (filename.substr(filename.length() - 4) != ".stl") throw "Can only load .stl models";
 
 			// attempt to load image from some likely locations
 			for (auto prefix : {"", "models/", "../models/", "../../models/", "../../../models/"}) {
-				if (load_stl(prefix + filename)) return;
+				if ((load_success = load_stl(prefix + filename, mat))) return;
 			}
 
 			throw "Could not load model '" + filename + "'";
 		} catch (char const* msg) {
 			std::cerr << "ERROR: " << msg << ".\n";
-			num_facets = 0; // indicate problem with loading
+			load_success = false;
 			model = make_shared<BVHNode>(HittableList()); // empty model as fallback
 		}
 	}
 
-	bool model_loaded() const { return num_facets > 0; }
-
+	bool model_loaded() const { return load_success; }
 	shared_ptr<BVHNode> get_model() const { return model; }
 
   private:
-	int                  num_facets = 0; // triange count
-	HittableList         facets;         // list of triangle facets
+	bool                 load_success;   // whether model successfully loaded
 	shared_ptr<BVHNode>  model;          // BVH-subdivided model
-	shared_ptr<Material> mat;
 
-
-	bool load_stl(const std::string& filename) {
+	bool load_stl(const std::string& filename, shared_ptr<Material> mat) {
 		DEBUG_STREAM << "Attempting to load model '" << filename << "' ...\n";
 		std::ifstream file(filename, std::ios::binary);
 		if (!file.is_open()) return false;
@@ -68,11 +66,13 @@ class Mesh {
 		if (!file) throw "Missing header from .stl file";
 
 		// read number of triangles
+		int num_facets;
 		file.read(reinterpret_cast<char*>(&num_facets), sizeof(int));
 		if (!file || num_facets <= 0) throw "Invalid triangle count";
 
-		// process trianges
+		// process triangles
 		STLFacet facet;
+		HittableList facets;
 		for (int t = 0; t < num_facets; t++) {
 			if (t % (num_facets / 100) == 0) {
 				DEBUG_STREAM << "Reading facets: " << int((t + 1.0) / num_facets * 100)
@@ -93,7 +93,7 @@ class Mesh {
 			facets.add(tri);
 		}
 
-		DEBUG_STREAM << '\n';
+		DEBUG_STREAM << "Reading facets: 100% of " << num_facets << '\n';
 		DEBUG_STREAM << "Building BVH tree for mesh...\n";
 		model = make_shared<BVHNode>(facets);
 

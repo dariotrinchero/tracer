@@ -16,11 +16,12 @@ INSTALL  = install
 
 # directories
 BINDIR   = ../bin
+OUTDIR   = ../renders
 LOCALBIN = ~/.local/bin
 
 # files
 EXES     = tracer
-RENDER   = $(BINDIR)/render.ppm
+RENDER   = $(OUTDIR)/render.ppm
 
 ### RULES ######################################################################
 
