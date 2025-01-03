@@ -51,8 +51,8 @@ class Shape2D : public Hittable {
 
 		// express intersection as anchor + a*u + b*v
 		Vec3 anchor_to_intersection = intersection - anchor;
-		auto a = dot(w, cross(anchor_to_intersection, v));
-		auto b = dot(w, cross(u, anchor_to_intersection));
+		auto a = triple(w, anchor_to_intersection, v);
+		auto b = triple(w, u, anchor_to_intersection);
 
 		// check intersection is inside shape
 		if (!is_interior(a, b)) return false;

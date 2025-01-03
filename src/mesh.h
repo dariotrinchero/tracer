@@ -87,7 +87,7 @@ class Mesh {
 			Vec3 s1 = Point3(facet.verts[1][0], facet.verts[1][1], facet.verts[1][2]) - corner;
 			Vec3 s2 = Point3(facet.verts[2][0], facet.verts[2][1], facet.verts[2][2]) - corner;
 
-			bool oriented = dot(cross(s1, s2), normal) >= 0;
+			bool oriented = triple(normal, s1, s2) >= 0;
 			shared_ptr<Triangle> tri = oriented ? make_shared<Triangle>(corner, s1, s2, mat)
 				: make_shared<Triangle>(corner, s2, s1, mat);
 			facets.add(tri);

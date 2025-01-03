@@ -107,6 +107,10 @@ inline Vec3 cross(const Vec3& u, const Vec3& v) {
 		u.e[0] * v.e[1] - u.e[1] * v.e[0]);
 }
 
+inline double triple(const Vec3& u, const Vec3& v, const Vec3& w) { // unrelated to Triple class
+	return dot(u, cross(v, w));
+}
+
 inline Vec3 reflect(const Vec3& u, const Vec3& normal) { // reflect u about plane with given normal
 	return u - 2 * dot(u, normal) * normal;
 }
@@ -127,7 +131,7 @@ class Mat3 : public Triple<Vec3, Mat3> {
 	Vec3 col(int i) const { return Vec3(e[0][i], e[1][i], e[2][i]); }
 	Mat3 transpose() const { return Mat3(col(0), col(1), col(2)); }
 
-	double det() const { return dot(e[0], cross(e[1], e[2])); }
+	double det() const { return triple(e[0], e[1], e[2]); }
 	Mat3 inv() const {
 		double determinant = det();
 		if (std::fabs(determinant) < NEAR_0_TOL)
