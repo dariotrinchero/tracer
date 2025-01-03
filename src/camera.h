@@ -54,16 +54,18 @@ class Camera {
 		int samples_per_thread = samples_per_pixel / pool.num_threads();
 		int sample_remainder = samples_per_pixel % pool.num_threads();
 
-		if (start_pixel != 0) {
+		bool resumed = false;
+		if (start_pixel == 0) PPMImage::write_header(std::cout, image_width, image_height);
+		else {
 			std::clog << "Resuming render from pixel: " << start_pixel << '\n';
-		} else { // output .ppm file header
-			PPMImage::write_header(std::cout, image_width, image_height);
+			resumed = true;
 		}
 
-		for (int j = start_pixel / image_width; j < image_height; j++) {
+		int first_row = start_pixel / image_width;
+		for (int j = first_row; j < image_height; j++) {
 			std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
 
-			for (int i = start_pixel % image_width; i < image_width; i++) {
+			for (int i = resumed && j == first_row ? start_pixel % image_width : 0; i < image_width; i++) {
 				// spawn threads to collect samples
 				std::vector<std::future<Color>> futures;
 				for (int t = 0; t < pool.num_threads(); t++) {

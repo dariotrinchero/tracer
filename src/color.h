@@ -34,10 +34,9 @@ class Color : public Triple<double, Color> {
 			gamma_to_linear(e[2], gamma));
 	}
 
-	const byte* to_bytes() const {
-		static byte bytes[] = { byte(RGB_MAX * e[0]), byte(RGB_MAX * e[1]), byte(RGB_MAX * e[2]) };
-		return bytes;
-	}
+	int r() const { return int(RGB_MAX * e[0]); }
+	int g() const { return int(RGB_MAX * e[1]); }
+	int b() const { return int(RGB_MAX * e[2]); }
 
   private:
 	static inline double linear_to_gamma(double linear_component, double gamma) {

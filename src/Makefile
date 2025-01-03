@@ -4,7 +4,7 @@ DEBUG    = -ggdb
 OPTIMISE = -O0
 WARNINGS = -Wall -Wextra -Wno-variadic-macros -Wno-overlength-strings -pedantic
 CFLAGS   = $(DEBUG) $(OPTIMISE) $(WARNINGS)
-DFLAGS   = -DDEBUG_MESH #-DDEBUG_TRACER 
+DFLAGS   = -DDEBUG_MESH -DDEBUG_TRACER
 
 # commands
 # Note: "c++" should default to the main local C++ compiler; if it does not, on
@@ -51,11 +51,8 @@ render: tracer
 	$(BINDIR)/tracer > $(RENDER)
 
 resume: tracer
-	if test -f $(RENDER); then
-		$(BINDIR)/tracer $$(($$(wc -l < $(RENDER)) - 3)) >> $(RENDER);
-	else
-		$(BINDIR)/tracer > $(RENDER);
-	fi
+	if test -f $(RENDER); then $(BINDIR)/tracer $$(($$(wc -l < $(RENDER)) - 3)) >> $(RENDER); \
+		else $(BINDIR)/tracer > $(RENDER); fi
 
 clean:
 	$(RM) $(foreach EXEFILE, $(EXES), $(BINDIR)/$(EXEFILE))

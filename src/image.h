@@ -44,11 +44,13 @@ class PPMImage {
 	}
 
 	static void write_color(std::ostream& out, const Color& col, double gamma, bool binary_enc = false) {
-		const byte *rgb = col.to_gamma(gamma).to_bytes();
-		if (binary_enc) out.write((const char*) rgb, 3);
-		else {
+		Color col_gam = col.to_gamma(gamma);
+		if (binary_enc) {
+			const char rgb[3] = { (char) col_gam.r(), (char) col_gam.g(), (char) col_gam.b() };
+			out.write(rgb, 3);
+		} else {
 			// TODO does the flush here slow things down? benchmark this...
-			out << (int) rgb[0] << ' ' << (int) rgb[1] << ' ' << (int) rgb[2] << '\n' << std::flush;
+			out << col_gam.r() << ' ' << col_gam.g() << ' ' << col_gam.b() << '\n' << std::flush;
 		}
 	}
 

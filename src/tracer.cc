@@ -10,7 +10,7 @@
 #include "mesh.h"
 
 // scene selection
-#include "scenes/12_dragon.inc"
+#include "scenes/08_squash.inc"
 
 // default to empty scene if none is loaded
 #ifndef SCENE_INC

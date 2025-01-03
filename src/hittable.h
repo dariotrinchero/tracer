@@ -138,6 +138,15 @@ class Transform : public Hittable {
 			trns = Mat3::id();
 			trns_inv = Mat3::id();
 		}
+
+		// check if object is a Transform; if so, unwrap it & multiply matrices
+		// TODO THERE IS A BUG HERE! THIS BEHAVES DIFFERENTLY ON squash SCENE VS IF THIS
+		// CODE IS ABSENT!!
+		if (auto inner_transform = std::dynamic_pointer_cast<Transform>(object)) {
+			trns = trns * inner_transform->trns;
+			trns_inv = inner_transform->trns_inv * trns_inv;
+			object = inner_transform->object;
+		}
 	}
 
 	// TODO devise way to automatically combine chained transformations into single matrix;
