@@ -32,6 +32,9 @@ RENDER   = $(OUTDIR)/render.ppm
 tracer: tracer.cc | $(BINDIR)
 	$(COMPILE) -o $(BINDIR)/$@ $^
 
+testlinalg: testlinalg.cc | $(BINDIR)
+	$(COMPILE) -o $(BINDIR)/$@ $^
+
 # units
 
 # TODO add if needed

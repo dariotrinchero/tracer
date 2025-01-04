@@ -1,5 +1,5 @@
 #include <stdexcept>
-#include <signal.h>
+#include <csignal>
 
 #include "hittable.h"
 #include "material.h"

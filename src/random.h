@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "vec3.h"
+#include "linalg.h"
 
 inline double rnd_double() {
 	// random double in range [0,1)
