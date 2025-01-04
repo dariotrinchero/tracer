@@ -149,4 +149,11 @@ inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, shared_ptr
 	return sides;
 }
 
+inline shared_ptr<HittableList> debug_bbox(shared_ptr<Hittable> obj) {
+	AABB bbox = obj->bounding_box();
+	Interval x = bbox.x, y = bbox.y, z = bbox.z;
+	return box(Point3(x.min, y.min, z.min), Point3(x.max, y.max, z.max),
+		make_shared<Lambertian>(make_shared<ImageTexture>("bbox.ppm")));
+}
+
 #endif

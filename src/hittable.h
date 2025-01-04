@@ -105,13 +105,13 @@ class Translate : public Hittable {
 
 class Transform : public Hittable {
   public:
- 	Transform(shared_ptr<Hittable> object, const Mat3& t) : object(object), trns(t) {
+	Transform(shared_ptr<Hittable> obj, const Mat3& t) : object(obj), trns(t) {
 		bbox = object->bounding_box();
 
 		try {
 			trns_inv = trns.inv();
 
-			// compute bounding box around transformed object
+			// transform bounding box
 			Point3 min(infinity, infinity, infinity);
 			Point3 max(-infinity, -infinity, -infinity);
 
@@ -140,17 +140,13 @@ class Transform : public Hittable {
 		}
 
 		// check if object is a Transform; if so, unwrap it & multiply matrices
-		// TODO THERE IS A BUG HERE! THIS BEHAVES DIFFERENTLY ON squash SCENE VS IF THIS
-		// CODE IS ABSENT!! MAYBE THIS VERSION IS CORRECT? WE SHOULD CHECK THIS
 		if (auto inner_transform = std::dynamic_pointer_cast<Transform>(object)) {
 			trns = trns * inner_transform->trns;
 			trns_inv = inner_transform->trns_inv * trns_inv;
 			object = inner_transform->object;
 		}
-	}
 
-	// TODO devise way to automatically combine chained transformations into single matrix;
-	// otherwise each ray must undergo multiple transformations during rendering
+	}
 
 	bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
 		// transform ray from world to object space
