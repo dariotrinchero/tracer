@@ -15,6 +15,8 @@ using std::shared_ptr;
 
 class Material;
 
+/* --- container for intersection data ---------------------------------------------------------- */
+
 class HitRecord {
   public:
 	Point3               p;          // point hit
@@ -31,6 +33,8 @@ class HitRecord {
 		normal = front_face ? outward_normal : -outward_normal;
 	}
 };
+
+/* --- superclass for hittable ------------------------------------------------------------------ */
 
 class Hittable {
   public:
@@ -76,6 +80,8 @@ class HittableList : public Hittable {
   private:
 	AABB bbox;
 };
+
+/* --- affine transformations ------------------------------------------------------------------- */
 
 class Translate : public Hittable {
   public:

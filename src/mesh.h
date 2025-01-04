@@ -11,12 +11,15 @@
 #include "material.h"
 #include "bvh.h"
 
-// debug output
+/* --- macros for debug output ------------------------------------------------------------------ */
+
 #ifdef DEBUG_MESH
 #define DEBUG_STREAM std::clog << "\r[Mesh] "
 #else
 #define DEBUG_STREAM if constexpr (false) std::clog
 #endif
+
+/* --- STL format of facet ---------------------------------------------------------------------- */
 
 namespace {
 	// STL format for each facet
@@ -29,6 +32,8 @@ namespace {
 	// size of facet in bytes (differs from sizeof(STLFacet) due to padding)
 	constexpr size_t facet_size = sizeof(float) * 3 * 4 + sizeof(unsigned short);
 }
+
+/* --- class for STL mesh ----------------------------------------------------------------------- */
 
 class Mesh {
   public:
@@ -101,6 +106,5 @@ class Mesh {
 		return true;
 	}
 };
-
 
 #endif

@@ -13,6 +13,8 @@
 using std::make_shared;
 using std::shared_ptr;
 
+/* --- superclass for texture ------------------------------------------------------------------- */
+
 class Texture {
   public:
 	virtual ~Texture() = default;
@@ -33,6 +35,8 @@ class SolidColor : public Texture {
   private:
 	Color albedo;
 };
+
+/* --- assorted textures ------------------------------------------------------------------------ */
 
 class CheckerTexture : public Texture {
   public:

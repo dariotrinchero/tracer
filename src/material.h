@@ -8,6 +8,8 @@
 #include "color.h"
 #include "texture.h"
 
+/* --- superclass for material ------------------------------------------------------------------ */
+
 class Material {
   public:
 	virtual ~Material() = default;
@@ -17,7 +19,9 @@ class Material {
 	virtual bool scatter(const Ray& r_in, const HitRecord& rec, Color& attenuation, Ray& scattered) const = 0;
 };
 
-class Lambertian : public Material {
+/* --- assorted materials ----------------------------------------------------------------------- */
+
+class Lambertian : public Material { // aka. matte material
   public:
 	Lambertian(const Color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
 
@@ -38,7 +42,7 @@ class Lambertian : public Material {
 	shared_ptr<Texture> tex;
 };
 
-class Metal : public Material {
+class Metal : public Material { // aka. mirror
   public:
 	Metal(const Color& albedo, double fuzz = 0)
 		: albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
@@ -56,7 +60,7 @@ class Metal : public Material {
 	double fuzz;
 };
 
-class Dielectric : public Material {
+class Dielectric : public Material { // aka. glass
   public:
 	Dielectric(double refractive_index) : refractive_index(refractive_index) {}
 
@@ -97,7 +101,7 @@ class Dielectric : public Material {
 	}
 };
 
-class DiffuseLight : public Material {
+class DiffuseLight : public Material { // aka. emitter
   public:
 	DiffuseLight(shared_ptr<Texture> tex) : tex(tex) {}
 	DiffuseLight(const Color& emit) : tex(make_shared<SolidColor>(emit)) {}
@@ -112,7 +116,7 @@ class DiffuseLight : public Material {
 	shared_ptr<Texture> tex;
 };
 
-class Isotropic : public Material {
+class Isotropic : public Material { // aka. smoke
   public:
 	Isotropic(const Color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
 	Isotropic(shared_ptr<Texture> tex) : tex(tex) {}

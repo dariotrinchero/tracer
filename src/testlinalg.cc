@@ -7,7 +7,7 @@
 
 #define PI 3.1415926535897932385
 
-// test utility functions
+/* --- testing utility functions ---------------------------------------------------------------- */
 
 #define BOLD_RED "\033[91m\033[1m"
 #define UNBOLD   "\033[22m"
@@ -32,7 +32,7 @@ inline void assert_equal(const Mat3& test, const Mat3& expected, const std::stri
 		EXPECTED("Mat3", '\n', '\n', "");
 }
 
-// test cases
+/* --- test cases ------------------------------------------------------------------------------- */
 
 void test_length() {
 	Vec3 v(1, 3, -4), w(2, 5, 0);
@@ -105,6 +105,8 @@ void test_rotations() {
 	ASSERT_EQUAL(Mat3::rotate(Vec3(0, 1, 0), 35.422), Mat3::rotate(Axis::Y, 35.422));
 	ASSERT_EQUAL(Mat3::rotate(Vec3(0, 0, 1), 35.422), Mat3::rotate(Axis::Z, 35.422));
 }
+
+/* --- main method ------------------------------------------------------------------------------ */
 
 int main() {
 	test_length();

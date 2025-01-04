@@ -11,6 +11,8 @@
 
 using byte = unsigned char;
 
+/* --- class for color -------------------------------------------------------------------------- */
+
 class Color : public Triple<double, Color> {
   public:
 	Color() : Triple(0, 0, 0) {}
@@ -34,6 +36,7 @@ class Color : public Triple<double, Color> {
 			gamma_to_linear(e[2], gamma));
 	}
 
+	// RBG values in range [0,255]
 	int r() const { return int(RGB_MAX * e[0]); }
 	int g() const { return int(RGB_MAX * e[1]); }
 	int b() const { return int(RGB_MAX * e[2]); }
@@ -48,10 +51,14 @@ class Color : public Triple<double, Color> {
 	}
 };
 
-// point-wise product used for scattered ray attenuation
+/* --- color operations ------------------------------------------------------------------------- */
+
 inline Color operator*(const Color& col1, const Color& col2) {
+	// point-wise (Hadamard) product (used for scattered ray attenuation)
     return Color(col1.e[0] * col2.e[0], col1.e[1] * col2.e[1], col1.e[2] * col2.e[2]);
 }
+
+/* --- global constants ------------------------------------------------------------------------- */
 
 const Color white(1, 1, 1);
 const Color black(0, 0, 0);

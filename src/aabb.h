@@ -6,7 +6,9 @@
 
 #define MIN_DIMENSION 1e-4 // minimum dimension along any axis
 
-class AABB { // AABB = 'axis-aligned bounding box'
+/* --- class for axis-aligned bounding box ------------------------------------------------------ */
+
+class AABB {
   public:
 	Interval x, y, z;
 
@@ -73,8 +75,7 @@ class AABB { // AABB = 'axis-aligned bounding box'
 	}
 };
 
-const AABB AABB::empty = AABB(Interval::empty, Interval::empty, Interval::empty);
-const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
+/* --- bounding box operations ------------------------------------------------------------------ */
 
 inline AABB operator+(const AABB& bbox, const Vec3& offset) {
 	return AABB(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
@@ -83,5 +84,10 @@ inline AABB operator+(const AABB& bbox, const Vec3& offset) {
 inline AABB operator+(const Vec3& offset, const AABB& bbox) {
 	return bbox + offset;
 }
+
+/* --- global constants ------------------------------------------------------------------------- */
+
+const AABB AABB::empty = AABB(Interval::empty, Interval::empty, Interval::empty);
+const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
 
 #endif

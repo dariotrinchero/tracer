@@ -157,8 +157,8 @@ class Camera {
 		if (depth <= 0) return black;
 
 		HitRecord rec;
-		// bound t>1e-3 prevents scattered rays colliding immediately with the same surface
-		// due to rounding errors, causing 'shadow acne'
+		/* t>1e-3 to prevent scattered rays re-colliding with same surface
+		 * (via rounding error) & causing 'shadow acne' */
 		if (!scene.hit(r, Interval(1e-3, infinity), rec)) return background(r);
 
 		// color from emission

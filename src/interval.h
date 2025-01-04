@@ -3,7 +3,7 @@
 
 #include <limits>
 
-const double infinity = std::numeric_limits<double>::infinity();
+/* --- class for interval ----------------------------------------------------------------------- */
 
 class Interval {
   public:
@@ -45,9 +45,7 @@ class Interval {
 	static const Interval empty, universe, unit;
 };
 
-const Interval Interval::empty = Interval();
-const Interval Interval::universe = Interval(-infinity, infinity);
-const Interval Interval::unit = Interval(0, 1);
+/* --- global constants ------------------------------------------------------------------------- */
 
 inline Interval operator+(const Interval& ivl, double displacement) {
 	return Interval(ivl.min + displacement, ivl.max + displacement);
@@ -56,5 +54,12 @@ inline Interval operator+(const Interval& ivl, double displacement) {
 inline Interval operator+(double displacement, const Interval& ivl) {
 	return ivl + displacement;
 }
+
+/* --- global constants ------------------------------------------------------------------------- */
+
+const double infinity = std::numeric_limits<double>::infinity();
+const Interval Interval::empty = Interval();
+const Interval Interval::universe = Interval(-infinity, infinity);
+const Interval Interval::unit = Interval(0, 1);
 
 #endif

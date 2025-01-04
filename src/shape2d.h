@@ -6,6 +6,8 @@
 #include "hittable.h"
 #include "material.h"
 
+/* --- superclass for 2D shape ------------------------------------------------------------------ */
+
 class Shape2D : public Hittable {
   public:
 	Shape2D(const Point3& anchor, const Vec3& normal, shared_ptr<Material> mat)
@@ -79,6 +81,8 @@ class Shape2D : public Hittable {
 	AABB bbox;
 };
 
+/* --- assorted shapes -------------------------------------------------------------------------- */
+
 class Parallelogram : public Shape2D {
   public:
 	Parallelogram(const Point3& corner, const Vec3& side1, const Vec3& side2, shared_ptr<Material> mat)
@@ -130,6 +134,8 @@ class Ellipse : public Annulus {
 	Ellipse(const Point3& center, const Vec3& major_axis, const Vec3& minor_axis, shared_ptr<Material> mat)
 		: Annulus(center, major_axis, minor_axis, mat) {}
 };
+
+/* --- functions for boxes ---------------------------------------------------------------------- */
 
 inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, shared_ptr<Material> mat) {
 	auto min = Point3(std::fmin(a[0], b[0]), std::fmin(a[1], b[1]), std::fmin(a[2], b[2]));

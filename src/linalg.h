@@ -7,10 +7,10 @@
 
 #define NEAR_0_TOL 1e-8 // tolerance for testing if vectors are near 0
 
-// Superclass for Vec3 & Mat3; operations (like +=) inherited by subclasses must return
-// those subtypes - thus we pass a derived class as generic to this base class
-// (cf. "curiously recurring template pattern")
+/* --- superclass for vector & matrix ----------------------------------------------------------- */
 
+/* Operations like += inherited by subclasses must return those subtypes; hence, pass derived
+ * class as generic to this base class (cf. 'curiously recurring template pattern'). */
 template <typename T, typename Derived>
 class Triple {
   public:
@@ -41,7 +41,7 @@ class Triple {
 	}
 };
 
-// Arithmetic operations shared by vectors & matrices
+/* --- arithmetic operators shared by vectors & matrices ---------------------------------------- */
 
 template <typename T, typename Derived>
 inline Derived operator+(const Triple<T, Derived>& u, const Triple<T, Derived>& v) {
@@ -68,7 +68,7 @@ inline Derived operator/(const Triple<T, Derived>& u, double t) {
 	return (1/t) * u;
 }
 
-// 3D vector
+/* --- class for 3D vector ---------------------------------------------------------------------- */
 
 class Vec3 : public Triple<double, Vec3> {
   public:
@@ -91,7 +91,7 @@ class Vec3 : public Triple<double, Vec3> {
 
 using Point3 = Vec3;
 
-// Vector-specific utility functions
+/* --- vector operations ------------------------------------------------------------------------ */
 
 inline std::ostream& operator<<(std::ostream& out, const Vec3& v) {
 	return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
@@ -115,7 +115,7 @@ inline Vec3 reflect(const Vec3& u, const Vec3& normal) { // reflect u about plan
 	return u - 2 * dot(u, normal) * normal;
 }
 
-// 3x3 matrix
+/* --- class for 3x3 matrix --------------------------------------------------------------------- */
 
 enum class Axis { X, Y, Z };
 
@@ -176,7 +176,7 @@ class Mat3 : public Triple<Vec3, Mat3> {
 	}
 };
 
-// Matrix-specific utility functions
+/* --- matrix operations ------------------------------------------------------------------------ */
 
 inline std::ostream& operator<<(std::ostream& out, const Mat3& m) {
 	return out << m.e[0] << '\n' << m.e[1] << '\n' << m.e[2];

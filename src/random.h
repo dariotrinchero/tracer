@@ -6,6 +6,8 @@
 
 #include "linalg.h"
 
+/* --- general RNG utility functions ------------------------------------------------------------ */
+
 inline double rnd_double() {
 	// random double in range [0,1)
 	return std::rand() / (RAND_MAX + 1.0);
@@ -20,6 +22,8 @@ inline int rnd_int(int min, int max) {
 	// random int in range [min,max]
 	return int(rnd_double(min, max + 1));
 }
+
+/* --- random vector utility functions ---------------------------------------------------------- */
 
 inline Vec3 rnd_vec() {
 	return Vec3(rnd_double(), rnd_double(), rnd_double());
@@ -49,6 +53,8 @@ inline Vec3 rnd_vec_unit_disk() {
 		if (r.length_squared() < 1.0) return r;
 	}
 }
+
+/* --- class for Perlin noise ------------------------------------------------------------------- */
 
 class Perlin {
   public:

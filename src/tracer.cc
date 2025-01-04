@@ -9,13 +9,16 @@
 #include "volume.h"
 #include "mesh.h"
 
-// scene selection
+/* --- scene selection -------------------------------------------------------------------------- */
+
 #include "scenes/08_squash.inc"
 
 // default to empty scene if none is loaded
 #ifndef SCENE_INC
 void build_scene(HittableList&, Camera&) {}
 #endif
+
+/* --- main method ------------------------------------------------------------------------------ */
 
 int main(int argc, char* argv[]) {
 	// set up default camera
