@@ -25,12 +25,12 @@ void build_scene(HittableList& scene, Camera& cam) {
 	scene.add(make_shared<ConstantMedium>(box1, 0.01, Color(0, 0, 0)));
 	scene.add(make_shared<ConstantMedium>(box2, 0.01, Color(1, 1, 1)));
 
-	cam.aspect_ratio      = 1.0;
-	cam.image_width       = 600;
+	cam.aspect_ratio       = 1.0;
+	cam.image_width        = 600;
 	cam.set_solid_bg(black);
 
-	cam.samples_per_pixel = 200;
-	cam.max_depth         = 50;
+	cam.subpixel_grid_size = 14;
+	cam.max_depth          = 50;
 
 	cam.vert_fov = 40;
 	cam.center   = Point3(278, 278, -800);

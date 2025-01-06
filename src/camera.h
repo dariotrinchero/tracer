@@ -19,25 +19,25 @@ using BgFn = std::function<Color(const Ray&)>;
 class Camera {
   public:
 	// image geometry
-	double aspect_ratio      = 1.0;
-	int    image_width       = 100;
-	double vert_fov          = 90;                // vertical FOV (deg)
+	double aspect_ratio       = 1.0;
+	int    image_width        = 100;
+	double vert_fov           = 90;                // vertical FOV (deg)
 
 	// camera positioning
-	Point3 center            = Point3(0, 0, 0);   // camera center location
-	Point3 facing            = Point3(0, 0, -1);  // direction faced by camera
-	Vec3   v_up              = Vec3(0, 1, 0);     // defines camera roll
+	Point3 center             = Point3(0, 0, 0);   // camera center location
+	Point3 facing             = Point3(0, 0, -1);  // direction faced by camera
+	Vec3   v_up               = Vec3(0, 1, 0);     // defines camera roll
 
 	// quality & performance
-	int    samples_per_pixel = 10;                // rays per pixel
-	int    max_depth         = 10;                // max ray bounces
+	int    subpixel_grid_size = 10;                // sqrt of # rays per pixel
+	int    max_depth          = 10;                // max ray bounces
 
 	// aesthetic features
-	double gamma             = 2.0;
-	double defocus_angle     = 0;                 // variation in incident ray angle (deg)
-	double focus_dist        = 10;                // aka. 'depth-of-field'
-	double shutter_speed     = 0;                 // aka. 'exposure time' (seconds); 0 = instantaneous
-	BgFn   background        = [](const Ray& r) { // background skybox
+	double gamma              = 2.0;
+	double defocus_angle      = 0;                 // variation in incident ray angle (deg)
+	double focus_dist         = 10;                // aka. 'depth-of-field'
+	double shutter_speed      = 0;                 // aka. 'exposure time' (seconds); 0 = instantaneous
+	BgFn   background         = [](const Ray& r) { // background skybox
 			// default sky background
 			double a = 0.5 * (r.direction().unit().y() + 1);
 			return (1 - a) * white + a * Color(.5, .7, 1);
@@ -54,31 +54,30 @@ class Camera {
 		int samples_per_thread = samples_per_pixel / pool.num_threads();
 		int sample_remainder = samples_per_pixel % pool.num_threads();
 
-		bool resumed = false;
 		if (start_pixel == 0) PPMImage::write_header(std::cout, image_width, image_height);
-		else {
-			std::clog << "Resuming render from pixel: " << start_pixel << '\n';
-			resumed = true;
-		}
+		else std::clog << "Resuming render from pixel: " << start_pixel << '\n';
 
-		int first_row = start_pixel / image_width;
-		for (int j = first_row; j < image_height; j++) {
+		int start_row = start_pixel / image_width;
+		for (int j = start_row; j < image_height; j++) {
 			std::clog << "\rScanlines remaining: " << (image_height - j) << ' ' << std::flush;
 
-			for (int i = resumed && j == first_row ? start_pixel % image_width : 0; i < image_width; i++) {
+			for (int i = j == start_row ? start_pixel % image_width : 0; i < image_width; i++) {
 				// spawn threads to collect samples
 				std::vector<std::future<Color>> futures;
+				int subpixel = 0;
+
 				for (int t = 0; t < pool.num_threads(); t++) {
 					int samples = samples_per_thread + (t < sample_remainder ?  1 : 0);
-					if (samples > 0) {
-						futures.push_back(pool.enqueue(&Camera::pixel_color, this, std::ref(scene), i, j, samples));
-					}
+					if (samples <= 0) break;
+					futures.push_back(pool.enqueue(&Camera::sample_pixel, this, std::ref(scene),
+						i, j, subpixel, samples));
+					subpixel += samples;
 				}
 
 				// join threads & aggregate results
-				Color pixel_col = black;
-				for (auto& future : futures) pixel_col += future.get();
-				PPMImage::write_color(std::cout, pixel_col / samples_per_pixel, gamma);
+				Color color_total = black;
+				for (auto& future : futures) color_total += future.get();
+				PPMImage::write_color(std::cout, color_total / samples_per_pixel, gamma);
 			}
 		}
 
@@ -90,20 +89,25 @@ class Camera {
 	}
 
   private:
+	// dimensions
 	int    image_height;
-	Point3 pixel00_loc;    // top left pixel
+	int    samples_per_pixel; // # rays averaged per pixel
+	double inv_sp_grid_size;  // intermediate: 1 / subpixel_grid_size
 
 	// basis vectors
-	Vec3   u, v, w;        // camera frame basis
-	Vec3   pixel_delta_u;  // horizontal pixel offset
-	Vec3   pixel_delta_v;  // vertical pixel offset
-	Vec3   defocus_disk_u; // defocus disk horizontal basis vec
-	Vec3   defocus_disk_v; // defocus disk vertical basis vec
+	Vec3   u, v, w;           // camera frame basis
+	Point3 pixel00_loc;       // top left pixel
+	Vec3   pixel_delta_u;     // horizontal pixel offset
+	Vec3   pixel_delta_v;     // vertical pixel offset
+	Vec3   defocus_disk_u;    // defocus disk horizontal basis vec
+	Vec3   defocus_disk_v;    // defocus disk vertical basis vec
 
 	void initialize(int start_pixel) {
-		// image & viewport dimensions
+		// dimensions of image, viewport, & sub-pixel grid
 		image_height = int(image_width / aspect_ratio);
 		if (image_height < 1) image_height = 1;
+		samples_per_pixel = subpixel_grid_size * subpixel_grid_size;
+		inv_sp_grid_size = 1.0 / subpixel_grid_size;
 		auto viewport_height = 2.0 * std::tan(vert_fov * PI / 360) * focus_dist;
 		auto viewport_width = viewport_height * (double(image_width) / image_height);
 
@@ -136,8 +140,20 @@ class Camera {
 		}
 	}
 
-	Ray get_ray(int i, int j) const {
-		auto offset = 0.5 * rnd_vec_unit_disk();
+	/**
+	 * Get ray from camera (ie. from random point on camera defocus disk) towards given
+	 * pixel & sub-pixel (ie. to random point within sub-pixel). Ray is also assigned
+	 * random time in range [0,shutter_speed).
+	 *
+	 * @param i    column index of pixel
+	 * @param j    row index of pixel
+	 * @param sp_i column index of sub-pixel
+	 * @param sp_j row index of sub-pixel
+	 * @return ray with source at camera & direction towards given sub-pixel
+	 */
+	Ray get_ray(int i, int j, int sp_i, int sp_j) const {
+		auto offset = inv_sp_grid_size * (0.5 * rnd_vec_unit_disk()
+			+ Vec3(sp_i + 0.5, sp_j + 0.5, 0)) - Vec3(0.5, 0.5, 0);
 		auto pixel_sample = pixel00_loc + ((i + offset.x()) * pixel_delta_u)
 			+ ((j + offset.y()) * pixel_delta_v);
 		
@@ -153,7 +169,16 @@ class Camera {
 		return Ray(ray_origin, pixel_sample - ray_origin, ray_time);
 	}
 
-	Color ray_color(const Ray& r, int depth, const Hittable& scene) const {
+	/**
+	 * Trace given ray towards given scene, recursing for scattered rays up to given depth.
+	 * Return resulting color of ray.
+	 *
+	 * @param scene the scene at which to fire ray
+	 * @param r     the ray to trace
+	 * @param depth maximum recursion depth (number of scattered rays followed)
+	 * @return color acquired by ray along its path through scene
+	 */
+	Color ray_color(const Hittable& scene, const Ray& r, int depth) const {
 		if (depth <= 0) return black;
 
 		HitRecord rec;
@@ -168,15 +193,31 @@ class Camera {
 		Ray scattered;
 		Color attenuation;
 		if (rec.mat->scatter(r, rec, attenuation, scattered))
-			ray_col += attenuation * ray_color(scattered, depth - 1, scene);
+			ray_col += attenuation * ray_color(scene, scattered, depth - 1);
 
 		return ray_col;
 	}
 
-	Color pixel_color(const Hittable& scene, int i, int j, int samples) {
-		Color pixel_col = black;
-		for (int s = 0; s < samples; s++) pixel_col += ray_color(get_ray(i, j), max_depth, scene);
-		return pixel_col;
+	/**
+	 * Fire specified number of samples at the scene, all within the bounds of given pixel,
+	 * but spread out along the sub-pixel grid (from given starting index). Return the sum
+	 * of the colors of all rays fired.
+	 *
+	 * @param scene    the scene at which to fire rays
+	 * @param i        column index of pixel to sample
+	 * @param j        row index of pixel to sample
+	 * @param subpixel index of sub-pixel at which to begin sampling (converted to 2D coords)
+	 * @param samples  number of samples to gather
+	 * @return sum of colors returned by all rays fired
+	 */
+	Color sample_pixel(const Hittable& scene, int i, int j, int subpixel, int samples) {
+		Color color_sum = black;
+		for (int sp = subpixel; sp < subpixel + samples; sp++) {
+			int sp_i = sp % subpixel_grid_size;
+			int sp_j = sp / subpixel_grid_size;
+			color_sum += ray_color(scene, get_ray(i, j, sp_i, sp_j), max_depth);
+		}
+		return color_sum;
 	}
 };
 
