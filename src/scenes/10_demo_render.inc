@@ -65,10 +65,10 @@ void build_scene(HittableList& scene, Camera& cam) {
 	scene.add(boxes2_trns);
 
 	// camera settings
-	cam.aspect_ratio      = 1.0;
-	cam.image_width       = 800;
-	cam.samples_per_pixel = 10000;
-	cam.max_depth         = 40;
+	cam.aspect_ratio       = 1.0;
+	cam.image_width        = 800;
+	cam.subpixel_grid_size = 100;
+	cam.max_depth          = 40;
 	cam.set_solid_bg(black);
 
 	cam.vert_fov = 40;

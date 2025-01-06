@@ -18,7 +18,7 @@ void build_scene(HittableList& scene, Camera& cam) {
 
 #ifdef DEBUG_TRACER
 	// really low-fidelity debug, as render is slow
-	cam.samples_per_pixel = 10;
+	cam.subpixel_grid_size = 3;
 	cam.max_depth = 3;
 #endif
 
