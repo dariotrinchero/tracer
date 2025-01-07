@@ -28,7 +28,7 @@ void build_scene(HittableList& scene, Camera& cam) {
 	cam.image_width        = 600;
 	cam.set_solid_bg(black);
 
-	cam.subpixel_grid_size = 14;
+	cam.subpixel_grid_size = 32;
 	cam.max_depth          = 50;
 
 	cam.vert_fov = 40;
