@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
 	if (argc > 1) { // resume prior render if start pixel given
 		try {
 			start_pixel = std::stoi(argv[1]);
+			std::clog << "Resuming render from pixel: " << start_pixel << '\n';
 		} catch (std::invalid_argument&) {
 			std::cerr << "ERROR: Invalid starting pixel.\n";
 			exit(EXIT_FAILURE);

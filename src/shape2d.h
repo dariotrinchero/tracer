@@ -109,11 +109,11 @@ class Triangle : public Shape2D {
 
 class Annulus : public Shape2D {
   public:
-	Annulus(const Point3& center, const Vec3& major_axis, const Vec3& minor_axis, shared_ptr<Material> mat)
-		: Shape2D(center - major_axis / 2 - minor_axis / 2, major_axis, minor_axis, mat), inner_sq(0) {}
+	Annulus(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, shared_ptr<Material> mat)
+		: Shape2D(center - maj_ax / 2 - min_ax / 2, maj_ax, min_ax, mat), inner_sq(0) {}
 
-	Annulus(const Point3& center, const Vec3& major_axis, const Vec3& minor_axis, double inner, shared_ptr<Material> mat)
-		: Shape2D(center - major_axis / 2 - minor_axis / 2, major_axis, minor_axis, mat)
+	Annulus(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, double inner, shared_ptr<Material> mat)
+		: Shape2D(center - maj_ax / 2 - min_ax / 2, maj_ax, min_ax, mat)
 	{
 		inner = Interval::unit.clamp(inner);
 		inner_sq = inner * inner / 4;
@@ -131,12 +131,25 @@ class Annulus : public Shape2D {
 
 class Ellipse : public Annulus {
   public:
-	Ellipse(const Point3& center, const Vec3& major_axis, const Vec3& minor_axis, shared_ptr<Material> mat)
-		: Annulus(center, major_axis, minor_axis, mat) {}
+	Ellipse(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, shared_ptr<Material> mat)
+		: Annulus(center, maj_ax, min_ax, mat) {}
+};
+
+class Circle : public Ellipse {
+  public:
+	Circle(const Point3& center, const Vec3& normal, double radius, shared_ptr<Material> mat)
+		: Ellipse(center, radius * Mat3::orthog(normal).col(0), radius * Mat3::orthog(normal).col(1), mat) {}
 };
 
 /* --- functions for boxes ---------------------------------------------------------------------- */
 
+/**
+ * Construct a cuboid box (rectangular prism) from given diagonally-opposed vertices.
+ *
+ * @param a, b pair of diagonally opposed vertices of box
+ * @param mat  material to use for sides of box
+ * @returns HittableList of Parallelogram sides which together form box
+ */
 inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, shared_ptr<Material> mat) {
 	auto min = Point3(std::fmin(a[0], b[0]), std::fmin(a[1], b[1]), std::fmin(a[2], b[2]));
 	auto max = Point3(std::fmax(a[0], b[0]), std::fmax(a[1], b[1]), std::fmax(a[2], b[2]));
@@ -155,6 +168,14 @@ inline shared_ptr<HittableList> box(const Point3& a, const Point3& b, shared_ptr
 	return sides;
 }
 
+/**
+ * Construct a cuboid box with dimensions matching the bounding box of the given object.
+ * This allows bounding boxes to be rendered for debugging purposes. The sides of the box
+ * use a dedicated image texture, "bbox.ppm".
+ *
+ * @param obj the object whose bounding box is to be rendered
+ * @returns HittableList of Parallelogram sides which together form bounding box of obj
+ */
 inline shared_ptr<HittableList> debug_bbox(shared_ptr<Hittable> obj) {
 	AABB bbox = obj->bounding_box();
 	Interval x = bbox.x, y = bbox.y, z = bbox.z;

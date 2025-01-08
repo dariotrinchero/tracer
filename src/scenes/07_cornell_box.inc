@@ -7,18 +7,23 @@ void build_scene(HittableList& scene, Camera& cam) {
 	auto green = make_shared<Lambertian>(Color(.12, .45, .15));
 	auto light = make_shared<DiffuseLight>(Color(15, 15, 15));
 
-	scene.add(make_shared<Parallelogram>(Point3(555, 0, 0), Vec3(0, 555, 0), Vec3(0, 0, 555), green));
-	scene.add(make_shared<Parallelogram>(Point3(0, 0, 0), Vec3(0, 555, 0), Vec3(0, 0, 555), red));
-	scene.add(make_shared<Parallelogram>(Point3(343, 554, 332), Vec3(-130, 0, 0), Vec3(0, 0, -105), light));
-	scene.add(make_shared<Parallelogram>(Point3(0, 0, 0), Vec3(555, 0, 0), Vec3(0, 0, 555), white));
-	scene.add(make_shared<Parallelogram>(Point3(555, 555, 555), Vec3(-555, 0, 0), Vec3(0, 0, -555), white));
-	scene.add(make_shared<Parallelogram>(Point3(0, 0, 555), Vec3(555, 0, 0), Vec3(0, 555, 0), white));	
+	// Cornell box sides
+	scene.add(make_shared<Parallelogram>(Point3(555, 0, 0), Vec3(0, 0, 555), Vec3(0, 555, 0), green));
+	scene.add(make_shared<Parallelogram>(Point3(0, 0, 555), Vec3(0, 0, -555), Vec3(0, 555, 0), red));
+	scene.add(make_shared<Parallelogram>(Point3(0, 555, 0), Vec3(555, 0, 0), Vec3(0, 0, 555), white));
+	scene.add(make_shared<Parallelogram>(Point3(0, 0, 555), Vec3(555, 0, 0), Vec3(0, 0, -555), white));
+	scene.add(make_shared<Parallelogram>(Point3(555, 0, 555), Vec3(-555, 0, 0), Vec3(0, 555, 0), white));
 
+	// Light
+	scene.add(make_shared<Parallelogram>(Point3(213, 554, 227), Vec3(130, 0, 0), Vec3(0, 0, 105), light));
+
+	// Box 1
 	shared_ptr<Hittable> box1 = box(Point3(0, 0, 0), Point3(165, 330, 165), white);
 	box1 = make_shared<Rotate>(box1, Axis::Y, 15 * PI / 180);
 	box1 = make_shared<Translate>(box1, Vec3(265, 0, 295));
 	scene.add(box1);
 
+	// Box 2
 	shared_ptr<Hittable> box2 = box(Point3(0, 0, 0), Point3(165, 165, 165), white);
 	box2 = make_shared<Rotate>(box2, Axis::Y, -18 * PI / 180);
 	box2 = make_shared<Translate>(box2, Vec3(130, 0, 65));

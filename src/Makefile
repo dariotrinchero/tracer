@@ -37,7 +37,7 @@ testlinalg: testlinalg.cc | $(BINDIR)
 
 # units
 
-# TODO add if needed
+# --- add if needed ---
 
 # BINDIR
 

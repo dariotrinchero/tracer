@@ -107,11 +107,25 @@ inline Vec3 cross(const Vec3& u, const Vec3& v) {
 		u.e[0] * v.e[1] - u.e[1] * v.e[0]);
 }
 
-inline double triple(const Vec3& u, const Vec3& v, const Vec3& w) { // unrelated to Triple class
+/**
+ * Compute the vector triple product of given three vectors (unrelated to Triple class
+ * above).
+ *
+ * @param u, v, w input vectors
+ * @returns triple product of given vectors
+ */
+inline double triple(const Vec3& u, const Vec3& v, const Vec3& w) {
 	return dot(u, cross(v, w));
 }
 
-inline Vec3 reflect(const Vec3& u, const Vec3& normal) { // reflect u about plane with given normal
+/**
+ * Reflect given vector about the plane with given normal.
+ *
+ * @param u      the vector to reflect
+ * @param normal the normal of the plane about which to reflect
+ * @returns the reflected vector
+ */
+inline Vec3 reflect(const Vec3& u, const Vec3& normal) {
 	return u - 2 * dot(u, normal) * normal;
 }
 
@@ -139,7 +153,7 @@ class Mat3 : public Triple<Vec3, Mat3> {
 		return Mat3(cross(col(1), col(2)), cross(col(2), col(0)), cross(col(0), col(1))) / determinant;
 	}
 
-	static Mat3 from_cols(const Vec3& c1, const Vec3& c2, const Vec3& c3) {
+	static inline Mat3 from_cols(const Vec3& c1, const Vec3& c2, const Vec3& c3) {
 		return Mat3(c1, c2, c3).transpose();
 	}
 
@@ -151,8 +165,31 @@ class Mat3 : public Triple<Vec3, Mat3> {
 		return diag(1, 1, 1);
 	}
 
+	/**
+	 * Get orthogonal matrix having given vector as final column. This amounts to extending
+	 * the given vector to an orthonormal basis; vectors are expanded in this basis via
+	 * matrix product: orthog(...) * vec.
+	 *
+	 * @param n vector to be used as final column of orthogonal matrix
+	 * @returns orthogonal matrix with given vector as final column
+	 */
+	static inline Mat3 orthog(const Vec3& n) {
+		Vec3 z_prime = n.unit();
+		Vec3 a = std::fabs(z_prime.x()) > 0.9 ? Vec3(0, 1, 0) : Vec3(1, 0, 0);
+		Vec3 y_prime = cross(z_prime, a).unit();
+		Vec3 x_prime = cross(y_prime, z_prime);
+		return Mat3::from_cols(x_prime, y_prime, z_prime);
+	}
+
+	/**
+	 * Get matrix encoding 3D rotation of given angle about given axis. This fast
+	 * implementation only accepts primary axes.
+	 *
+	 * @param axis  one of the three primary axes
+	 * @param angle angle by which to rotate
+	 * @returns rotation matrix with given axis & angle
+	 */
 	static inline Mat3 rotate(Axis axis, double angle) {
-		// fast implementation of rotations about default axes
 		auto c = std::cos(angle), s = std::sin(angle);
 		switch (axis) {
 			case Axis::X: return Mat3(1, 0, 0, 0, c, -s, 0, s, c);
@@ -161,18 +198,21 @@ class Mat3 : public Triple<Vec3, Mat3> {
 		}
 	}
 
+	/**
+	 * Get matrix encoding 3D rotation of given angle about given axis, using Rodrigues'
+	 * rotation formula.
+	 *
+	 * @param axis  the axis about which to rotate
+	 * @param angle angle by which to rotate
+	 * @returns rotation matrix with given axis & angle
+	 */
 	static Mat3 rotate(const Vec3& axis, double angle) {
-		// cf. "Rodrigues' rotation formula"
 		double cos = std::cos(angle);
 		Vec3 u = axis.unit();
 		Vec3 ex(1, 0, 0), ey(0, 1, 0), ez(0, 0, 1);
 		Mat3 outer_prod(u[0] * u, u[1] * u, u[2] * u);
 		Mat3 cross_mat(cross(ex, u), cross(ey, u), cross(ez, u));
 		return cos * id() + std::sin(angle) * cross_mat + (1 - cos) * outer_prod;
-	}
-
-	static inline Mat3 scale(double sx, double sy, double sz) {
-		return diag(sx, sy, sz);
 	}
 };
 

@@ -24,11 +24,16 @@ class HitRecord {
 	Vec3                 normal;     // normal to object at hit point
 	bool                 front_face; // whether ray hit front of surface
 	shared_ptr<Material> mat;        // material of hit object
-	double               u,v;        // u-v texture coordinates of p
+	double               u, v;       // u-v texture coordinates of p
 
+	/**
+	 * Record normal vector. Our convention is that the normal is opposed to ray, rather
+	 * than facing outwards; thus, we record face orientation in front_face instead.
+	 *
+	 * @param r              the ray which intersected the surface
+	 * @param outward_normal the outward-facing normal to the surface at intersection point
+	 */
 	void set_face_normal(const Ray& r, const Vec3& outward_normal) {
-		// our convention: normal is opposed to ray, rather than being outward-facing;
-		// record face orientation in front_face instead
 		front_face = dot(r.direction(), outward_normal) < 0;
 		normal = front_face ? outward_normal : -outward_normal;
 	}
@@ -83,6 +88,10 @@ class HittableList : public Hittable {
 
 /* --- affine transformations ------------------------------------------------------------------- */
 
+// TODO unify with other transformations by using 4x4 matrices & length 4 vectors instead
+// see pg 16+ of https://web.cs.hacettepe.edu.tr/~erkut/bco511.s12/w04-transformations.pdf
+// This will allow us to squash a sequence: transform > translate > transform
+// into a single transform, like we currently do with sequences of just transforms
 class Translate : public Hittable {
   public:
 	Translate(shared_ptr<Hittable> object, const Vec3& offset) : object(object), offset(offset) {
@@ -180,7 +189,7 @@ class Transform : public Hittable {
 class Scale : public Transform {
   public:
 	Scale(shared_ptr<Hittable> obj, double sx, double sy, double sz)
-		: Transform(obj, Mat3::scale(sx, sy, sz)) {}
+		: Transform(obj, Mat3::diag(sx, sy, sz)) {}
 };
 
 class Rotate : public Transform {

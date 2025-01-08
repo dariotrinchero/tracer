@@ -8,53 +8,95 @@
 
 /* --- general RNG utility functions ------------------------------------------------------------ */
 
+/**
+ * Generate random uniformly-distributed fractional double.
+ *
+ * @returns random double in range [0,1)
+ */
 inline double rnd_double() {
-	// random double in range [0,1)
 	return std::rand() / (RAND_MAX + 1.0);
 }
 
+/**
+ * Generate random double uniformly-distributed in specified range.
+ *
+ * @param min, max bounds of range
+ * @returns random double in range [min,max)
+ */
 inline double rnd_double(double min, double max) {
-	// random double in range [min,max)
 	return min + (max - min) * rnd_double();
 }
 
+/**
+ * Generate random int uniformly-distributed in specified range.
+ *
+ * @param min, max bounds of range
+ * @returns random int in range [min,max]
+ */
 inline int rnd_int(int min, int max) {
-	// random int in range [min,max]
 	return int(rnd_double(min, max + 1));
 }
 
 /* --- random vector utility functions ---------------------------------------------------------- */
 
+/**
+ * Generate random vector uniformly-distributed in first octant.
+ *
+ * @returns random vector with all components in range [0,1)
+ */
 inline Vec3 rnd_vec() {
 	return Vec3(rnd_double(), rnd_double(), rnd_double());
 }
 
+/**
+ * Generate random vector uniformly-distributed in specified cube.
+ *
+ * @param min, max bounds of range of each component
+ * @returns random vector with components all in range [min,max)
+ */
 inline Vec3 rnd_vec(double min, double max) {
 	return Vec3(rnd_double(min, max), rnd_double(min, max), rnd_double(min, max));
 }
 
+/**
+ * Generate (by rejection sampling) random unit vector, uniformly-distributed on unit sphere.
+ *
+ * @returns random vector of unit length
+ */
 inline Vec3 rnd_unit_vec() {
 	while (true) {
 		Vec3 r = rnd_vec(-1, 1);
 		double lensq = r.length_squared();
-		if (1e-160 < lensq && lensq <= 1) return r / sqrt(lensq);
+		if (1e-160 < lensq && lensq <= 1) return r / std::sqrt(lensq);
 	}
 }
 
+/**
+ * Generate random vector uniformly-distributed on unit hemisphere lying on the same side
+ * of the plane with given normal as that normal.
+ *
+ * @param normal the normal to plane bisecting unit sphere
+ * @returns random unit vector having positive dot product with given normal
+ */
 inline Vec3 rnd_vec_hemisphere(const Vec3& normal) {
 	Vec3 r = rnd_unit_vec();
 	return dot(r, normal) > 0 ? r : -r;
 }
 
+/**
+ * Generate (by rejection sampling) random vector uniformly-distributed within unit disk
+ * on xy-plane.
+ *
+ * @returns random vector in unit disk on xy-plane
+ */
 inline Vec3 rnd_vec_unit_disk() {
-	// rejection method: faster than polar because of avoided sin, cos, & sqrt
 	while (true) {
 		Vec3 r = Vec3(rnd_double(-1, 1), rnd_double(-1, 1), 0);
 		if (r.length_squared() < 1.0) return r;
 	}
 }
 
-/* --- class for Perlin noise ------------------------------------------------------------------- */
+/* --- class for 3D Perlin noise ---------------------------------------------------------------- */
 
 class Perlin {
   public:
@@ -65,6 +107,12 @@ class Perlin {
 		perlin_generate_perm(perm_z);
 	}
 
+	/**
+	 * Get value of Perlin noise at given point.
+	 *
+	 * @param p point at which to sample noise
+	 * @returns value of Perlin noise at given point
+	 */
 	double at(const Point3& p) const {
 		auto i = int(std::floor(p.x()));
 		auto j = int(std::floor(p.y()));
@@ -84,6 +132,14 @@ class Perlin {
 		return perlin_interp(c, u, v, w);
 	}
 
+	/**
+	 * Get weighted sum of several layers of Perlin noise, each having double the frequency
+	 * & half the amplitude of the previous. The resulting noise is marble-like.
+	 *
+	 * @param p     point at which to sample turbulence noise
+	 * @param depth number of layers to sum
+	 * @returns value of weighted sum of Perlin noise layers at given point
+	 */
 	double turbulence(const Point3& p, int depth) const {
 		auto accum = 0.0;
 		auto temp_p = p;

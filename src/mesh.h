@@ -14,7 +14,7 @@
 /* --- macros for debug output ------------------------------------------------------------------ */
 
 #ifdef DEBUG_MESH
-#define DEBUG_STREAM std::clog << "\r[Mesh] "
+#define DEBUG_STREAM std::clog << "\r[" << __FILE__ << "] "
 #else
 #define DEBUG_STREAM if constexpr (false) std::clog
 #endif
