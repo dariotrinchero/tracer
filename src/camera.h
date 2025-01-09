@@ -183,24 +183,24 @@ class Camera {
 		Color pixel_col = rec.mat->emitted(rec);
 
 		// color from scattered rays
-		Ray scattered;
-		Color attenuation;
-		double pdf_value;
-		if (!rec.mat->scatter(r, rec, attenuation, scattered, pdf_value)) return pixel_col;
+		ScatterRecord srec;
+		if (!rec.mat->scatter(r, rec, srec)) return pixel_col;
 
-		auto p0 = make_shared<HittablePDF>(lights, rec.p);
-		auto p1 = make_shared<CosinePDF>(rec.normal);
-		MixturePDF mixed_pdf(p0, p1);
+		if (!srec.pdf) {
+			return srec.attenuation * ray_color(scene, lights, srec.override_ray, depth - 1);
+		}
 
-		// TODO this is now supplanting code from material.h ??
-		scattered = Ray(rec.p, mixed_pdf.sample(), r.time()); // TODO why overwrite scattered?
-		pdf_value = mixed_pdf.density(scattered.direction()); // TODO why overwrite pdf_value?
+		auto light_pdf = make_shared<HittablePDF>(lights, rec.p);
+		MixturePDF mixed_pdf(light_pdf, srec.pdf);
+
+		Ray scattered(rec.p, mixed_pdf.sample(), r.time());
+		double pdf_value = mixed_pdf.density(scattered.direction());
 
 		// TODO this is no longer the actual PDF used for scattering?
 		double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered);
 
 		Color sample_col = ray_color(scene, lights, scattered, depth - 1);
-		pixel_col += (attenuation * scatter_pdf * sample_col) / pdf_value;
+		pixel_col += (srec.attenuation * scatter_pdf * sample_col) / pdf_value;
 		return pixel_col;
 	}
 

@@ -8,8 +8,16 @@
 #include "color.h"
 #include "texture.h"
 
-// TODO is this still needed after PDF class in random.h?
 #define PI 3.1415926535897932385
+
+/* --- container for scattering data ------------------------------------------------------------ */
+
+class ScatterRecord {
+  public:
+	Color                 attenuation;  // ray color attenuation from scattering
+	shared_ptr<SpherePDF> pdf;          // PDF from which to sample scattered ray (or nullptr)
+	Ray                   override_ray; // hard-coded scattered ray to use if pdf is nullptr
+};
 
 /* --- superclass for material ------------------------------------------------------------------ */
 
@@ -30,20 +38,15 @@ class Material {
 
 	/**
 	 * Determine whether given incoming ray scatters upon collision with material. If so,
-	 * record the outgoing scattered ray, color attenuation, and value of scattering PDF,
-	 * as evaluated for this instance of scattering.
+	 * record details of scattering event (attenutation, scattered ray, etc).
 	 *
-	 * @param r_in[in]         incoming ray
-	 * @param rec[in]          HitRecord with incoming ray intersection details
-	 * @param attenuation[out] populated with ray color attenuation if scattering occurs
-	 * @param scattered[out]   populated with outgoing scattered ray if scattering occurs
-	 * @param pdf[out]         populated with scattering PDF sample if scattering occurs
+	 * @param r_in[in]  incoming ray
+	 * @param rec[in]   HitRecord with incoming ray intersection details
+	 * @param srec[out] populated with details of scattering if scattering occurs
 	 * @returns whether incoming ray is scattered
 	 */
-	virtual bool scatter(
-		const Ray& r_in, const HitRecord& rec, Color& attenuation, Ray& scattered, double& pdf
-	) const {
-		unused(r_in, rec, attenuation, scattered, pdf);
+	virtual bool scatter(const Ray& r_in, const HitRecord& rec, ScatterRecord& srec) const {
+		unused(r_in, rec, srec);
 		return false;
 	}
 
@@ -69,26 +72,15 @@ class Lambertian : public Material { // aka. matte material
 
 	Lambertian(shared_ptr<Texture> tex) : tex(tex) {}
 
-	bool scatter(
-		const Ray& r_in, const HitRecord& rec, Color& attenuation, Ray& scattered, double& pdf
-	) const override {
-		// Old method: TODO was this not faster? rnd_cosine_direction() is slow!
-		//auto scatter_direction = rec.normal + rnd_unit_vec();
-		// catch degenerate scatter direction
-		//if (scatter_direction.near_zero()) scatter_direction = rec.normal;
-
-		Mat3 onb = Mat3::orthog(rec.normal);
-		auto scatter_direction = onb * rnd_cosine_direction();
-
-		scattered = Ray(rec.p, scatter_direction, r_in.time());
-		attenuation = tex->value(rec.u, rec.v, rec.p);
-		// TODO this is the same as the value returned by scatter_pdf(...). Why is it also
-		// being computed & returned here?
-		pdf = dot(onb.col(2), scatter_direction) / PI;
+	bool scatter(const Ray&, const HitRecord& rec, ScatterRecord& srec) const override {
+		srec.attenuation = tex->value(rec.u, rec.v, rec.p);
+		srec.pdf = make_shared<CosinePDF>(rec.normal);
 		return true;
 	}
 
 	double scatter_pdf(const Ray&, const HitRecord& rec, const Ray& scattered) const override {
+		// TODO WHAT IS THIS METHOD DOING HERE ANY MORE? WHY DOES THIS NOT JUST INVOKE CosinePDF::density()??
+		// If we remove it, remember to remove the constant PI from above
 		auto cos_theta = dot(rec.normal, scattered.direction().unit());
 		return cos_theta < 0 ? 0 : cos_theta / PI;
 	}
@@ -102,13 +94,14 @@ class Metal : public Material { // aka. mirror
 	Metal(const Color& albedo, double fuzz = 0)
 		: albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
 
-	bool scatter(
-		const Ray& r_in, const HitRecord& rec, Color& attenuation, Ray& scattered, double&
-	) const override {
+	bool scatter(const Ray& r_in, const HitRecord& rec, ScatterRecord& srec) const override {
 		Vec3 reflected = reflect(r_in.direction(), rec.normal);
 		reflected = reflected.unit() + (fuzz * rnd_unit_vec());
-		scattered = Ray(rec.p, reflected, r_in.time());
-		attenuation = albedo;
+
+		srec.attenuation = albedo;
+		srec.pdf = nullptr;
+		srec.override_ray = Ray(rec.p, reflected, r_in.time());
+
 		return dot(reflected, rec.normal) > 0;
 	}
 
@@ -121,9 +114,7 @@ class Dielectric : public Material { // aka. glass
   public:
 	Dielectric(double refractive_index) : refractive_index(refractive_index) {}
 
-	bool scatter(
-		const Ray& r_in, const HitRecord& rec, Color& attenuation, Ray& scattered, double&
-	) const override {
+	bool scatter(const Ray& r_in, const HitRecord& rec, ScatterRecord& srec) const override {
 		double ri = rec.front_face ? 1 / refractive_index : refractive_index;
 
 		Vec3 in_dir = r_in.direction().unit();
@@ -137,8 +128,10 @@ class Dielectric : public Material { // aka. glass
 			direction = reflect(in_dir, rec.normal);
 		else direction = refract(in_dir, rec.normal, ri, cos_theta);
 
-		scattered = Ray(rec.p, direction, r_in.time());
-		attenuation = white; // for tinted glass (subsurface scattering), render volume inside dielectric
+		srec.attenuation = white; // for tint (subsurface scattering), render volume inside dielectric
+		srec.pdf = nullptr;
+		srec.override_ray = Ray(rec.p, direction, r_in.time());
+
 		return true;
 	}
 
@@ -195,18 +188,14 @@ class Isotropic : public Material { // aka. smoke
 	Isotropic(const Color& albedo) : tex(make_shared<SolidColor>(albedo)) {}
 	Isotropic(shared_ptr<Texture> tex) : tex(tex) {}
 
-	bool scatter(
-		const Ray& r_in, const HitRecord& rec, Color& attenuation, Ray& scattered, double& pdf
-	) const override {
-		scattered = Ray(rec.p, rnd_unit_vec(), r_in.time());
-		attenuation = tex->value(rec.u, rec.v, rec.p);
-		// TODO this is the same as the value returned by scatter_pdf(...). Why is it also
-		// being computed & returned here?
-		pdf = 1 / (4 * PI);
+	bool scatter(const Ray&, const HitRecord& rec, ScatterRecord& srec) const override {
+		srec.attenuation = tex->value(rec.u, rec.v, rec.p);
+		srec.pdf = make_shared<UniformPDF>();
 		return true;
 	}
 
 	double scatter_pdf(const Ray&, const HitRecord&, const Ray&) const override {
+		// TODO WHAT IS THIS METHOD DOING HERE ANY MORE? WHY DOES THIS NOT JUST INVOKE UniformPDF::density()??
 		return 1 / (4 * PI);
 	}
 
