@@ -8,16 +8,18 @@
 #include "shape2d.h"
 #include "volume.h"
 #include "mesh.h"
+#include "bvh.h"
 
 void register_interrupt_handler();
 
 /* --- scene selection -------------------------------------------------------------------------- */
 
 #include "scenes/07_cornell_box.inc"
+// TODO update all other scenes to construct lights also
 
 // default to empty scene if none is loaded
 #ifndef SCENE_INC
-void build_scene(HittableList&, Camera&) {}
+void build_scene(HittableList&, HittableList&, Camera&) {}
 #endif
 
 /* --- main method ------------------------------------------------------------------------------ */
@@ -42,10 +44,13 @@ int main(int argc, char* argv[]) {
 	cam.max_depth = 50;
 #endif
 
-	// build scene & render
+	// build scene
 	HittableList scene;
-	build_scene(scene, cam);
+	HittableList lights;
+	build_scene(scene, lights, cam);
+	BVHNode scene_tree(scene);
 
+	// begin render
 	int start_pixel = 0;
 	if (argc > 1) { // resume prior render if start pixel given
 		try {
@@ -56,7 +61,8 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 	}
-	cam.render(scene, start_pixel);
+	cam.render(scene_tree, *lights.objects[0], start_pixel); // TODO TEMPORARY until HittableList supports pdf_value()
+	//cam.render(scene_tree, lights, start_pixel);
 }
 
 /* --- helper methods --------------------------------------------------------------------------- */

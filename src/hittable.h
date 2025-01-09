@@ -13,6 +13,9 @@
 using std::make_shared;
 using std::shared_ptr;
 
+// macro to mark arguments as unused (to silence warnings)
+template <typename... Args> inline void unused(Args&&...) {}
+
 class Material;
 
 /* --- container for intersection data ---------------------------------------------------------- */
@@ -45,10 +48,51 @@ class Hittable {
   public:
 	virtual ~Hittable() = default;
 
+	/**
+	 * Test whether given ray hits this object within given time interval. If so, record
+	 * details of intersection in given record.
+	 *
+	 * @param[in] r     ray to test for intersection
+	 * @param[in] ray_t interval of times for which to consider ray intersections
+	 * @param[out] rec  HitRecord for storing ray intersection details
+	 * @returns whether given ray hits this object
+	 */
 	virtual bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const = 0;
 
+	/**
+	 * Get bounding box of hittable object.
+	 *
+	 * @returns axis-aligned bounding box containing this
+	 */
 	virtual AABB bounding_box() const = 0;
+
+	/**
+	 * Get PDF on unit sphere of directions (around given origin) which, when sampled,
+	 * produces rays whose intersection points with this hittable are uniformly-
+	 * distributed across the surface of this hittable. Usually called on lights; used to
+	 * bias rays towards hitting this object.
+	 *
+	 * @param origin    source of rays
+	 * @param direction direction of rays
+	 * @returns the PDF on unit sphere around given origin evaluated at given direction
+	 */
+	virtual double pdf_value(const Point3& origin, const Vec3& direction) const {
+		unused(origin, direction);
+		return 0.0;
+	}
+
+	/**
+	 * Generate uniformly-distributed random point on surface of hittable object. Usually
+	 * called on lights; used to bias rays towards hitting this object.
+	 *
+	 * @returns random point on surface of this hittable
+	 */
+	virtual Point3 rnd_point() const {
+		return Vec3(1, 0, 0);
+	}
 };
+
+/* --- class for groups of hittables ------------------------------------------------------------ */
 
 class HittableList : public Hittable {
   public:

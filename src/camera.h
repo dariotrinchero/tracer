@@ -8,11 +8,8 @@
 #include "material.h"
 #include "color.h"
 #include "random.h"
-#include "bvh.h"
 #include "threads.h"
 #include "image.h"
-
-#define PI 3.1415926535897932385
 
 using BgFn = std::function<Color(const Ray&)>;
 
@@ -47,7 +44,7 @@ class Camera {
 		background = [bg](const Ray&) { return bg; };
 	}
 
-	void render(const BVHNode& scene, int start_pixel = 0) {
+	void render(const Hittable& scene, const Hittable& lights, int start_pixel = 0) {
 		initialize(start_pixel);
 
 		ThreadPool pool;
@@ -55,7 +52,6 @@ class Camera {
 		int sample_remainder = samples_per_pixel % pool.num_threads();
 
 		if (start_pixel == 0) PPMImage::write_header(std::cout, image_width, image_height);
-		else std::clog << "Resuming render from pixel: " << start_pixel << '\n';
 
 		int start_row = start_pixel / image_width;
 		for (int j = start_row; j < image_height; j++) {
@@ -70,7 +66,7 @@ class Camera {
 					int samples = samples_per_thread + (t < sample_remainder ?  1 : 0);
 					if (samples <= 0) break;
 					futures.push_back(pool.enqueue(&Camera::sample_pixel, this, std::ref(scene),
-						i, j, subpixel, samples));
+						std::ref(lights), i, j, subpixel, samples));
 					subpixel += samples;
 				}
 
@@ -82,10 +78,6 @@ class Camera {
 		}
 
 		std::clog << "\rDone.                 \n";
-	}
-
-	void render(const HittableList& scene, int start_pixel = 0) {
-		render(BVHNode(scene), start_pixel);
 	}
 
   private:
@@ -149,7 +141,7 @@ class Camera {
 	 * @param j    row index of pixel
 	 * @param sp_i column index of sub-pixel
 	 * @param sp_j row index of sub-pixel
-	 * @return ray with source at camera & direction towards given sub-pixel
+	 * @returns ray with source at camera & direction towards given sub-pixel
 	 */
 	Ray get_ray(int i, int j, int sp_i, int sp_j) const {
 		auto offset = inv_sp_grid_size * (0.5 * rnd_vec_unit_disk()
@@ -173,12 +165,13 @@ class Camera {
 	 * Trace given ray towards given scene, recursing for scattered rays up to given depth.
 	 * Return resulting color of ray.
 	 *
-	 * @param scene the scene at which to fire ray
-	 * @param r     the ray to trace
-	 * @param depth maximum recursion depth (number of scattered rays followed)
-	 * @return color acquired by ray along its path through scene
+	 * @param scene  the scene at which to fire ray
+	 * @param lights TODO
+	 * @param r      the ray to trace
+	 * @param depth  maximum recursion depth (number of scattered rays followed)
+	 * @returns color acquired by ray along its path through scene
 	 */
-	Color ray_color(const Hittable& scene, const Ray& r, int depth) const {
+	Color ray_color(const Hittable& scene, const Hittable& lights, const Ray& r, int depth) const {
 		if (depth <= 0) return black;
 
 		HitRecord rec;
@@ -187,15 +180,28 @@ class Camera {
 		if (!scene.hit(r, Interval(1e-3, infinity), rec)) return background(r);
 
 		// color from emission
-		Color ray_col = rec.mat->emitted(rec.u, rec.v, rec.p);
+		Color pixel_col = rec.mat->emitted(rec);
 
 		// color from scattered rays
 		Ray scattered;
 		Color attenuation;
-		if (rec.mat->scatter(r, rec, attenuation, scattered))
-			ray_col += attenuation * ray_color(scene, scattered, depth - 1);
+		double pdf_value;
+		if (!rec.mat->scatter(r, rec, attenuation, scattered, pdf_value)) return pixel_col;
 
-		return ray_col;
+		auto p0 = make_shared<HittablePDF>(lights, rec.p);
+		auto p1 = make_shared<CosinePDF>(rec.normal);
+		MixturePDF mixed_pdf(p0, p1);
+
+		// TODO this is now supplanting code from material.h ??
+		scattered = Ray(rec.p, mixed_pdf.sample(), r.time()); // TODO why overwrite scattered?
+		pdf_value = mixed_pdf.density(scattered.direction()); // TODO why overwrite pdf_value?
+
+		// TODO this is no longer the actual PDF used for scattering?
+		double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered);
+
+		Color sample_col = ray_color(scene, lights, scattered, depth - 1);
+		pixel_col += (attenuation * scatter_pdf * sample_col) / pdf_value;
+		return pixel_col;
 	}
 
 	/**
@@ -204,18 +210,21 @@ class Camera {
 	 * of the colors of all rays fired.
 	 *
 	 * @param scene    the scene at which to fire rays
+	 * @param lights   TODO
 	 * @param i        column index of pixel to sample
 	 * @param j        row index of pixel to sample
 	 * @param subpixel index of sub-pixel at which to begin sampling (converted to 2D coords)
 	 * @param samples  number of samples to gather
-	 * @return sum of colors returned by all rays fired
+	 * @returns sum of colors returned by all rays fired
 	 */
-	Color sample_pixel(const Hittable& scene, int i, int j, int subpixel, int samples) {
+	Color sample_pixel(
+		const Hittable& scene, const Hittable& lights, int i, int j, int subpixel, int samples
+	) {
 		Color color_sum = black;
 		for (int sp = subpixel; sp < subpixel + samples; sp++) {
 			int sp_i = sp % subpixel_grid_size;
 			int sp_j = sp / subpixel_grid_size;
-			color_sum += ray_color(scene, get_ray(i, j, sp_i, sp_j), max_depth);
+			color_sum += ray_color(scene, lights, get_ray(i, j, sp_i, sp_j), max_depth);
 		}
 		return color_sum;
 	}

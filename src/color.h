@@ -43,10 +43,12 @@ class Color : public Triple<double, Color> {
 
   private:
 	static inline double linear_to_gamma(double linear_component, double gamma) {
+		if (std::isnan(linear_component)) linear_component = 0;
 		return std::pow(Interval::unit.clamp(linear_component), 1.0 / gamma);
 	}
 
 	static inline double gamma_to_linear(double gamma_component, double gamma) {
+		if (std::isnan(gamma_component)) gamma_component = 0;
 		return std::pow(Interval::unit.clamp(gamma_component), gamma);
 	}
 };

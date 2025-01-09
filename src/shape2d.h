@@ -10,20 +10,6 @@
 
 class Shape2D : public Hittable {
   public:
-	Shape2D(const Point3& anchor, const Vec3& normal, shared_ptr<Material> mat)
-		: anchor(anchor), normal(normal), mat(mat)
-	{
-		// construct orthonormal basis u,v
-		u = (normal[2] < normal[0] // test ensures stability for components near 0
-			? Vec3(normal[1], -normal[0], 0)
-			: Vec3(0, -normal[2], normal[1])).unit();
-		v = cross(normal, u).unit();
-		w = normal;
-
-		D = dot(normal, anchor);
-		set_bounding_box();
-	}
-
 	Shape2D(const Point3& anchor, const Vec3& u, const Vec3& v, shared_ptr<Material> mat)
 		: anchor(anchor), u(u), v(v), mat(mat)
 	{
@@ -91,7 +77,26 @@ class Parallelogram : public Shape2D {
 	bool is_interior(double a, double b) const override {
 		return Interval::unit.contains(a) && Interval::unit.contains(b);
 	}
+
+	double pdf_value(const Point3& origin, const Vec3& direction) const override {
+		HitRecord rec;
+		if (!this->hit(Ray(origin, direction), Interval(1e-3, infinity), rec)) return 0;
+
+		double distance_sq = rec.t * rec.t * direction.length_squared();
+		double cos_theta = std::fabs(dot(direction, rec.normal) / direction.length());
+
+		return w.length() * distance_sq / cos_theta; // w.length() = 1/area of parallelogram
+	}
+
+	Point3 rnd_point() const override {
+		return anchor + (rnd_double() * u) + (rnd_double() * v);
+	}
 };
+
+/* ================================================================================================
+ * TODO Add pdf_value() & rnd_point() to other 2D primitives.
+ * Maybe the pdf_value() of quad generalizes to all 2D primitives? It somewhat seems so.
+ * ============================================================================================== */
 
 class Triangle : public Shape2D {
   public:
@@ -109,15 +114,21 @@ class Triangle : public Shape2D {
 
 class Annulus : public Shape2D {
   public:
-	Annulus(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, shared_ptr<Material> mat)
-		: Shape2D(center - maj_ax / 2 - min_ax / 2, maj_ax, min_ax, mat), inner_sq(0) {}
-
 	Annulus(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, double inner, shared_ptr<Material> mat)
 		: Shape2D(center - maj_ax / 2 - min_ax / 2, maj_ax, min_ax, mat)
 	{
 		inner = Interval::unit.clamp(inner);
 		inner_sq = inner * inner / 4;
 	}
+
+	Annulus(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, shared_ptr<Material> mat)
+		: Annulus(center, maj_ax, min_ax, 0, mat) {}
+
+	Annulus(const Point3& center, const Vec3& normal, double radius, double inner, shared_ptr<Material> mat)
+		: Annulus(center, 2 * radius * Mat3::orthog(normal).col(0), 2 * radius * Mat3::orthog(normal).col(1), inner, mat) {}
+
+	Annulus(const Point3& center, const Vec3& normal, double radius, shared_ptr<Material> mat)
+		: Annulus(center, normal, radius, 0, mat) {}
 
 	bool is_interior(double a, double b) const override {
 		double a2 = a - 0.5, b2 = b - 0.5;
@@ -133,12 +144,15 @@ class Ellipse : public Annulus {
   public:
 	Ellipse(const Point3& center, const Vec3& maj_ax, const Vec3& min_ax, shared_ptr<Material> mat)
 		: Annulus(center, maj_ax, min_ax, mat) {}
+
+	Ellipse(const Point3& center, const Vec3& normal, double radius, shared_ptr<Material> mat)
+		: Annulus(center, normal, radius, mat) {}
 };
 
 class Circle : public Ellipse {
   public:
 	Circle(const Point3& center, const Vec3& normal, double radius, shared_ptr<Material> mat)
-		: Ellipse(center, radius * Mat3::orthog(normal).col(0), radius * Mat3::orthog(normal).col(1), mat) {}
+		: Ellipse(center, normal, radius, mat) {}
 };
 
 /* --- functions for boxes ---------------------------------------------------------------------- */

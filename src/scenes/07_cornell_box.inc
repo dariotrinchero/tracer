@@ -1,7 +1,7 @@
 #ifndef SCENE_INC
 #define SCENE_INC
 
-void build_scene(HittableList& scene, Camera& cam) {
+void build_scene(HittableList& scene, HittableList& lights, Camera& cam) {
 	auto red   = make_shared<Lambertian>(Color(.65, .05, .05));
 	auto white = make_shared<Lambertian>(Color(.73, .73, .73));
 	auto green = make_shared<Lambertian>(Color(.12, .45, .15));
@@ -15,7 +15,9 @@ void build_scene(HittableList& scene, Camera& cam) {
 	scene.add(make_shared<Parallelogram>(Point3(555, 0, 555), Vec3(-555, 0, 0), Vec3(0, 555, 0), white));
 
 	// Light
-	scene.add(make_shared<Parallelogram>(Point3(213, 554, 227), Vec3(130, 0, 0), Vec3(0, 0, 105), light));
+	auto light_quad = make_shared<Parallelogram>(Point3(213, 554, 227), Vec3(130, 0, 0), Vec3(0, 0, 105), light);
+	scene.add(light_quad);
+	lights.add(light_quad);
 
 	// Box 1
 	shared_ptr<Hittable> box1 = box(Point3(0, 0, 0), Point3(165, 330, 165), white);
@@ -34,6 +36,7 @@ void build_scene(HittableList& scene, Camera& cam) {
 	cam.set_solid_bg(black);
 
 	cam.subpixel_grid_size = 32;
+	//cam.subpixel_grid_size = 3;
 	cam.max_depth          = 50;
 
 	cam.vert_fov = 40;
