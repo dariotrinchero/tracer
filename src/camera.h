@@ -166,7 +166,7 @@ class Camera {
 	 * Return resulting color of ray.
 	 *
 	 * @param scene  the scene at which to fire ray
-	 * @param lights TODO
+	 * @param lights light emitters in scene (otherwise objects toward which to bias rays)
 	 * @param r      the ray to trace
 	 * @param depth  maximum recursion depth (number of scattered rays followed)
 	 * @returns color acquired by ray along its path through scene
@@ -175,32 +175,33 @@ class Camera {
 		if (depth <= 0) return black;
 
 		HitRecord rec;
-		/* t>1e-3 to prevent scattered rays re-colliding with same surface
-		 * (via rounding error) & causing 'shadow acne' */
+		/* t>1e-3: 'bias' to prevent scattered rays re-colliding with same surface
+		 * (by rounding error) & causing 'shadow acne' */
 		if (!scene.hit(r, Interval(1e-3, infinity), rec)) return background(r);
 
 		// color from emission
 		Color pixel_col = rec.mat->emitted(rec);
 
-		// color from scattered rays
+		// get scattering data
 		ScatterRecord srec;
 		if (!rec.mat->scatter(r, rec, srec)) return pixel_col;
 
-		if (!srec.pdf) {
-			return srec.attenuation * ray_color(scene, lights, srec.override_ray, depth - 1);
+		Ray scattered;
+		double weight = 1;
+
+		if (!srec.pdf) { // use hard-coded scattered ray
+			scattered = srec.override_ray;
+		} else { // sample scattered ray direction from PDF
+			MixturePDF mixed_pdf(make_shared<HittablePDF>(lights, rec.p), srec.pdf);
+			scattered = Ray(rec.p, mixed_pdf.sample(), r.time());
+
+			double pdf_value = mixed_pdf.density(scattered.direction());
+			double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered); // TODO what is this actually doing?
+			weight = scatter_pdf / pdf_value;
 		}
 
-		auto light_pdf = make_shared<HittablePDF>(lights, rec.p);
-		MixturePDF mixed_pdf(light_pdf, srec.pdf);
-
-		Ray scattered(rec.p, mixed_pdf.sample(), r.time());
-		double pdf_value = mixed_pdf.density(scattered.direction());
-
-		// TODO this is no longer the actual PDF used for scattering?
-		double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered);
-
-		Color sample_col = ray_color(scene, lights, scattered, depth - 1);
-		pixel_col += (srec.attenuation * scatter_pdf * sample_col) / pdf_value;
+		// color from scattering
+		pixel_col += weight * srec.attenuation * ray_color(scene, lights, scattered, depth - 1);
 		return pixel_col;
 	}
 
@@ -210,7 +211,7 @@ class Camera {
 	 * of the colors of all rays fired.
 	 *
 	 * @param scene    the scene at which to fire rays
-	 * @param lights   TODO
+	 * @param lights   light emitters in scene (otherwise objects toward which to bias rays)
 	 * @param i        column index of pixel to sample
 	 * @param j        row index of pixel to sample
 	 * @param subpixel index of sub-pixel at which to begin sampling (converted to 2D coords)

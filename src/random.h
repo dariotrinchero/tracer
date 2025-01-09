@@ -107,10 +107,11 @@ inline Vec3 rnd_vec_unit_disk() {
  * @returns random unit vector with cosine distribution centered on z-axis
  */
 inline Vec3 rnd_cosine_direction() {
-	auto r1 = rnd_double(), r2 = rnd_double();
-	auto phi = 2 * PI * r1;
-	auto sqrt_r2 = std::sqrt(r2);
-	return Vec3(std::cos(phi) * sqrt_r2, std::sin(phi) * sqrt_r2, std::sqrt(1 - r2));
+	double phi = 2 * PI * rnd_double();
+	double r2 = rnd_double();
+	double sqrt_r2 = std::sqrt(r2);
+	Vec3 direction(std::cos(phi) * sqrt_r2, std::sin(phi) * sqrt_r2, std::sqrt(1 - r2));
+	return direction.near_zero() ? Vec3(1, 0, 0) : direction;
 }
 
 /* --- superclass for PDF on unit sphere -------------------------------------------------------- */

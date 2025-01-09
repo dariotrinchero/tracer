@@ -61,8 +61,7 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 	}
-	cam.render(scene_tree, *lights.objects[0], start_pixel); // TODO TEMPORARY until HittableList supports pdf_value()
-	//cam.render(scene_tree, lights, start_pixel);
+	cam.render(scene_tree, lights, start_pixel);
 }
 
 /* --- helper methods --------------------------------------------------------------------------- */

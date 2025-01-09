@@ -16,7 +16,9 @@ using std::shared_ptr;
 // macro to mark arguments as unused (to silence warnings)
 template <typename... Args> inline void unused(Args&&...) {}
 
+// signatures from material.h & random.h
 class Material;
+inline int rnd_int(int min, int max);
 
 /* --- container for intersection data ---------------------------------------------------------- */
 
@@ -87,9 +89,9 @@ class Hittable {
 	 * object.
 	 *
 	 * @param origin source of rays (tail of random vector)
-	 * @returns random point on surface of this hittable
+	 * @returns random vector from origin to point on surface of this hittable
 	 */
-	virtual Point3 rnd_point(const Point3& origin) const {
+	virtual Vec3 rnd_point(const Point3& origin) const {
 		unused(origin);
 		return Vec3(1, 0, 0);
 	}
@@ -128,6 +130,16 @@ class HittableList : public Hittable {
 	}
 
 	AABB bounding_box() const override { return bbox; }
+
+	double pdf_value(const Point3& origin, const Vec3& direction) const override {
+		double sum = 0;
+		for (const auto& obj : objects) sum += obj->pdf_value(origin, direction);
+		return sum / objects.size();
+	}
+
+	Vec3 rnd_point(const Point3& origin) const override {
+		return objects[rnd_int(0, objects.size() - 1)]->rnd_point(origin);
+	}
 
   private:
 	AABB bbox;
@@ -177,12 +189,9 @@ class Transform : public Hittable {
 			Point3 min(infinity, infinity, infinity);
 			Point3 max(-infinity, -infinity, -infinity);
 
-			for (int i = 0; i < 2; i++) {
-				for (int j = 0; j < 2; j++) {
-					for (int k = 0; k < 2; k++) {
-						auto x = i * bbox.x.max + (1 - i) * bbox.x.min;
-						auto y = j * bbox.y.max + (1 - j) * bbox.y.min;
-						auto z = k * bbox.z.max + (1 - k) * bbox.z.min;
+			for (auto x : { bbox.x.min, bbox.x.max }) {
+				for (auto y : { bbox.y.min, bbox.y.max }) {
+					for (auto z : { bbox.z.min, bbox.z.max }) {
 						Vec3 tester = trns * Vec3(x, y, z);
 
 						for (int c = 0; c < 3; c++) {
