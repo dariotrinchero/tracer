@@ -1,4 +1,3 @@
-
 # compiler flags
 DEBUG    = -ggdb
 OPTIMISE = -O0
@@ -39,10 +38,13 @@ testlinalg: testlinalg.cc | $(BINDIR)
 
 # --- add if needed ---
 
-# BINDIR
+# BINDIR & OUTDIR
 
 $(BINDIR):
 	mkdir $(BINDIR)
+
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
 ### PHONY TARGETS ##############################################################
 
@@ -50,10 +52,10 @@ $(BINDIR):
 
 all: tracer
 
-render: tracer
+render: tracer | $(OUTDIR)
 	$(BINDIR)/tracer > $(RENDER)
 
-resume: tracer
+resume: tracer | $(OUTDIR)
 	if test -f $(RENDER); then $(BINDIR)/tracer $$(($$(wc -l < $(RENDER)) - 3)) >> $(RENDER); \
 		else $(BINDIR)/tracer > $(RENDER); fi
 

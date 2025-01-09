@@ -42,3 +42,8 @@ In addition to the features covered in the Ray Tracing in One Weekend Series, th
 - STL mesh loading (see `src/mesh.h`)
 - from-scratch PPM image loading (see `src/image.h`)
 - more documentation; cleaner, more generic APIs
+
+## Disclaimers
+
+None of the models in `models` or the images in `images` are included under the license of this repository. I do not
+claim ownership for any of these; they serve only as test cases for the renderer.

@@ -8,7 +8,7 @@ void build_scene(HittableList& scene, Camera& cam) {
 
 	// dragon
 	shared_ptr<Material> mat = make_shared<Metal>(Color(0.65, 0.21, 0.16), 0.3);
-	scene.add(Mesh("dragon_simplified.stl", mat).get_model());
+	scene.add(Mesh("dragon.stl", mat).get_model());
 
 	// camera
 	cam.center = Point3(150, 270, 70);
