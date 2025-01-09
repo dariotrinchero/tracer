@@ -202,7 +202,7 @@ class HittablePDF : public SpherePDF {
 	}
 
 	Vec3 sample() const override {
-		return objects.rnd_point() - origin;
+		return objects.rnd_point(origin);
 	}
 
   private:

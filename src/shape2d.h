@@ -88,8 +88,8 @@ class Parallelogram : public Shape2D {
 		return w.length() * distance_sq / cos_theta; // w.length() = 1/area of parallelogram
 	}
 
-	Point3 rnd_point() const override {
-		return anchor + (rnd_double() * u) + (rnd_double() * v);
+	Point3 rnd_point(const Point3& origin) const override {
+		return anchor + (rnd_double() * u) + (rnd_double() * v) - origin;
 	}
 };
 

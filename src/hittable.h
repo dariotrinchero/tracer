@@ -82,12 +82,15 @@ class Hittable {
 	}
 
 	/**
-	 * Generate uniformly-distributed random point on surface of hittable object. Usually
-	 * called on lights; used to bias rays towards hitting this object.
+	 * Generate vector from given origin to uniformly-distributed random point on surface
+	 * of hittable object. Usually called on lights; used to bias rays towards hitting this
+	 * object.
 	 *
+	 * @param origin source of rays (tail of random vector)
 	 * @returns random point on surface of this hittable
 	 */
-	virtual Point3 rnd_point() const {
+	virtual Point3 rnd_point(const Point3& origin) const {
+		unused(origin);
 		return Vec3(1, 0, 0);
 	}
 };
