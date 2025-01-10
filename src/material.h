@@ -47,19 +47,6 @@ class Material {
 		unused(r_in, rec, srec);
 		return false;
 	}
-
-	/**
-	 * Probability distribution function (PDF) for scattering.
-	 *
-	 * @param r_in      incoming ray
-	 * @param rec       HitRecord with incoming ray intersection details
-	 * @param scattered a possible outgoing scattered ray
-	 * @returns probability density for r_in to be scattered to given outgoing ray
-	 */
-	virtual double scatter_pdf(const Ray& r_in, const HitRecord& rec, const Ray& scattered) const {
-		unused(r_in, rec, scattered);
-		return 0;
-	}
 };
 
 /* --- assorted materials ----------------------------------------------------------------------- */
@@ -74,13 +61,6 @@ class Lambertian : public Material { // aka. matte material
 		srec.attenuation = tex->value(rec.u, rec.v, rec.p);
 		srec.pdf = make_shared<CosinePDF>(rec.normal);
 		return true;
-	}
-
-	double scatter_pdf(const Ray&, const HitRecord& rec, const Ray& scattered) const override {
-		// TODO What is this method doing here? Why not invoke CosinePDF::density()??
-		// If we remove it, remember to remove the constant PI from above
-		auto cos_theta = dot(rec.normal, scattered.direction().unit());
-		return cos_theta < 0 ? 0 : cos_theta / PI;
 	}
 
   private:
@@ -190,11 +170,6 @@ class Isotropic : public Material { // aka. smoke
 		srec.attenuation = tex->value(rec.u, rec.v, rec.p);
 		srec.pdf = make_shared<UniformPDF>();
 		return true;
-	}
-
-	double scatter_pdf(const Ray&, const HitRecord&, const Ray&) const override {
-		// TODO What is this method doing here? Why not invoke UniformPDF::density()??
-		return 1 / (4 * PI);
 	}
 
   private:

@@ -195,10 +195,10 @@ class Camera {
 			MixturePDF mixed_pdf(make_shared<HittablePDF>(lights, rec.p), srec.pdf);
 			scattered = Ray(rec.p, mixed_pdf.sample(), r.time());
 
-			double pdf_value = mixed_pdf.density(scattered.direction());
-			if (pdf_value == 0) return pixel_col; // scattering is impossible
-			double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered); // TODO why not use srec.pdf here?
-			weight = scatter_pdf / pdf_value;
+			double sample_pdf_val = mixed_pdf.density(scattered.direction());
+			if (sample_pdf_val == 0) return pixel_col; // scattering is impossible
+			double scatter_pdf_val = srec.pdf->density(scattered.direction());
+			weight = scatter_pdf_val / sample_pdf_val;
 		}
 
 		// color from scattering
