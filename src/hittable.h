@@ -133,6 +133,7 @@ class HittableList : public Hittable {
 
 	double pdf_value(const Point3& origin, const Vec3& direction) const override {
 		// TODO can this not invoke MixturePDF?
+		// TODO this returns NaN if objects is empty!!
 		double sum = 0;
 		for (const auto& obj : objects) sum += obj->pdf_value(origin, direction);
 		return sum / objects.size();
@@ -140,6 +141,7 @@ class HittableList : public Hittable {
 
 	Vec3 rnd_point(const Point3& origin) const override {
 		// TODO can this not invoke MixturePDF?
+		// TODO this segfaults if objects is empty!!
 		return objects[rnd_int(0, objects.size() - 1)]->rnd_point(origin);
 	}
 

@@ -22,12 +22,11 @@ class BVHNode : public Hittable {
 			left = objects[start];
 			right = objects[start + 1];
 		} else if (object_span > 0) {
-			// sort object list along longest axis
-			int axis = bbox.longest_axis();
-			std::sort(objects.begin() + start, objects.begin() + end, box_cmp(axis));
+			// split object list into left & right halves along longest axis
+			auto begin = objects.begin();
+			int mid = start + object_span / 2;
+			std::nth_element(begin + start, begin + mid, begin + end, box_cmp(bbox.longest_axis()));
 
-			// split sorted list into left & right halves
-			auto mid = start + object_span / 2;
 			left = make_shared<BVHNode>(objects, start, mid);
 			right = make_shared<BVHNode>(objects, mid, end);
 		}

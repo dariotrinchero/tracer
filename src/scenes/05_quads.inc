@@ -1,7 +1,7 @@
 #ifndef SCENE_INC
 #define SCENE_INC
 
-void build_scene(HittableList& scene, Camera& cam) {
+void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	auto left_red     = make_shared<Lambertian>(Color(1.0, 0.2, 0.2));
 	auto back_green   = make_shared<Lambertian>(Color(0.2, 1.0, 0.2));
 	auto right_blue   = make_shared<Lambertian>(Color(0.2, 0.2, 1.0));

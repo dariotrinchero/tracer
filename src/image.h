@@ -49,7 +49,7 @@ class PPMImage {
 	 * @param height     the height of the PPM image
 	 * @param binary_enc whether image uses binary encoding (else, use ASCII encoding)
 	 */
-	static void write_header(std::ostream& out, int width, int height, bool binary_enc = false) {
+	static void write_header(std::ostream& out, int width, int height, bool binary_enc=false) {
 		out << (binary_enc ? "P6\n" : "P3\n") << width << ' ' << height << "\n255\n";
 	}
 
@@ -61,13 +61,12 @@ class PPMImage {
 	 * @param gamma      gamma correction to apply to pixel prior to output
 	 * @param binary_enc whether image uses binary encoding (else, use ASCII encoding)
 	 */
-	static void write_color(std::ostream& out, const Color& col, double gamma, bool binary_enc = false) {
+	static void write_color(std::ostream& out, const Color& col, double gamma, bool binary_enc=false) {
 		Color col_gam = col.to_gamma(gamma);
 		if (binary_enc) {
 			const char rgb[3] = { (char) col_gam.r(), (char) col_gam.g(), (char) col_gam.b() };
 			out.write(rgb, 3);
 		} else {
-			// TODO does the flush here slow things down? benchmark this...
 			out << col_gam.r() << ' ' << col_gam.g() << ' ' << col_gam.b() << '\n' << std::flush;
 		}
 	}

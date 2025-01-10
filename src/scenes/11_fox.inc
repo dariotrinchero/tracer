@@ -1,7 +1,7 @@
 #ifndef SCENE_INC
 #define SCENE_INC
 
-void build_scene(HittableList& scene, Camera& cam) {
+void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	// checkered sphere floor
 	auto checker = make_shared<CheckerTexture>(9.0, Color(.2, .3, .1), Color(.9, .9, .9));
 	scene.add(make_shared<Sphere>(Point3(0, -4000, 0), 4000, make_shared<Lambertian>(checker)));

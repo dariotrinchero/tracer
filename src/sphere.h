@@ -58,8 +58,8 @@ class Sphere : public Hittable {
 
 	AABB bounding_box() const override { return bbox; }
 
-	// TODO ONLY WORKS FOR STATIONARY SPHERE
-	// maybe modify pdf_value to take Ray (or just Ray time) as parameter?
+	/* TODO Only works for stationary sphere; maybe modify pdf_value to take Ray
+	 * (or just Ray time) as parameter? */
 	double pdf_value(const Point3& origin, const Vec3& direction) const override {
 		HitRecord rec;
 		if (!this->hit(Ray(origin, direction), Interval(1e-3, infinity), rec)) return 0;

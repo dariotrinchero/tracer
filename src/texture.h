@@ -61,7 +61,7 @@ class CheckerTexture : public Texture {
 
 class ImageTexture : public Texture {
   public:
-	ImageTexture(const std::string& filename, double gamma = 2.2) // gamma=2.2 is typical
+	ImageTexture(const std::string& filename, double gamma=2.2) // gamma = 2.2 is typical
 		: img(filename), gamma(gamma) {}
 
 	Color value(double u, double v, const Point3&) const override {

@@ -17,6 +17,7 @@ class Color : public Triple<double, Color> {
   public:
 	Color() : Triple(0, 0, 0) {}
 
+	Color(const Vec3& v) : Triple(v[0], v[1], v[2]) {}
 	Color(double r, double g, double b) : Triple(r, g, b) {}
 
 	explicit Color(int hex)

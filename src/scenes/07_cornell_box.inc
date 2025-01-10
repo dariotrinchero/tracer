@@ -37,7 +37,11 @@ void build_scene(HittableList& scene, HittableList& lights, Camera& cam) {
 	cam.image_width        = 600;
 	cam.set_solid_bg(black);
 
+#ifdef DEBUG_TRACER // very few rays to stress test importance sampling
+	cam.subpixel_grid_size = 3;
+#else
 	cam.subpixel_grid_size = 32;
+#endif
 	cam.max_depth          = 50;
 
 	cam.vert_fov = 40;

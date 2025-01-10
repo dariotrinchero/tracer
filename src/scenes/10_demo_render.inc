@@ -1,7 +1,7 @@
 #ifndef SCENE_INC
 #define SCENE_INC
 
-void build_scene(HittableList& scene, Camera& cam) {
+void build_scene(HittableList& scene, HittableList& lights, Camera& cam) {
 	// floor of randomly-displaced boxes
 	HittableList boxes1;
 	auto ground = make_shared<Lambertian>(Color(0.48, 0.83, 0.53));
@@ -25,7 +25,9 @@ void build_scene(HittableList& scene, Camera& cam) {
 
 	// ceiling light
 	auto light = make_shared<DiffuseLight>(Color(7, 7, 7));
-	scene.add(make_shared<Parallelogram>(Point3(123, 554, 147), Vec3(300, 0, 0), Vec3(0, 0, 265), light));
+	auto light_quad = make_shared<Parallelogram>(Point3(123, 554, 147), Vec3(300, 0, 0), Vec3(0, 0, 265), light);
+	scene.add(light_quad);
+	lights.add(light_quad);
 
 	// moving matte sphere
 	auto center1 = Point3(400, 400, 200);
@@ -67,7 +69,7 @@ void build_scene(HittableList& scene, Camera& cam) {
 	// camera settings
 	cam.aspect_ratio       = 1.0;
 	cam.image_width        = 800;
-	cam.subpixel_grid_size = 100;
+	cam.subpixel_grid_size = 5;
 	cam.max_depth          = 40;
 	cam.set_solid_bg(black);
 

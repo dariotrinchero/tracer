@@ -44,7 +44,7 @@ class Camera {
 		background = [bg](const Ray&) { return bg; };
 	}
 
-	void render(const Hittable& scene, const Hittable& lights, int start_pixel = 0) {
+	void render(const Hittable& scene, const Hittable& lights, int start_pixel=0) {
 		initialize(start_pixel);
 
 		ThreadPool pool;
@@ -196,7 +196,8 @@ class Camera {
 			scattered = Ray(rec.p, mixed_pdf.sample(), r.time());
 
 			double pdf_value = mixed_pdf.density(scattered.direction());
-			double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered); // TODO what is this actually doing?
+			if (pdf_value == 0) return pixel_col; // scattering is impossible
+			double scatter_pdf = rec.mat->scatter_pdf(r, rec, scattered); // TODO why not use srec.pdf here?
 			weight = scatter_pdf / pdf_value;
 		}
 

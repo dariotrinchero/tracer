@@ -15,10 +15,8 @@ void register_interrupt_handler();
 /* --- scene selection -------------------------------------------------------------------------- */
 
 #include "scenes/07_cornell_box.inc"
-// TODO update all other scenes to construct lights also
 
-// default to empty scene if none is loaded
-#ifndef SCENE_INC
+#ifndef SCENE_INC // default to empty scene if none is loaded
 void build_scene(HittableList&, HittableList&, Camera&) {}
 #endif
 
