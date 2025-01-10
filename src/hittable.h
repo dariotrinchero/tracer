@@ -18,7 +18,7 @@ template <typename... Args> inline void unused(Args&&...) {}
 
 // signatures from material.h & random.h
 class Material;
-inline int rnd_int(int min, int max);
+template <typename T> inline T rnd_item(const std::vector<T>& items);
 
 /* --- container for intersection data ---------------------------------------------------------- */
 
@@ -106,7 +106,10 @@ class HittableList : public Hittable {
 	HittableList() {}
 	HittableList(shared_ptr<Hittable> object) { add(object); }
 
-	void clear() { objects.clear(); }
+	void clear() {
+		objects.clear();
+		bbox = AABB();
+	}
 
 	void add(shared_ptr<Hittable> object) {
 		objects.push_back(object);
@@ -132,17 +135,17 @@ class HittableList : public Hittable {
 	AABB bounding_box() const override { return bbox; }
 
 	double pdf_value(const Point3& origin, const Vec3& direction) const override {
-		// TODO can this not invoke MixturePDF?
-		// TODO this returns NaN if objects is empty!!
+		// TODO can this not be unified with MixturePDF::density()? It duplicates much code.
+		if (objects.size() == 0)
+			throw std::runtime_error("No Hittables in list to obtain PDF value.");
+
 		double sum = 0;
 		for (const auto& obj : objects) sum += obj->pdf_value(origin, direction);
 		return sum / objects.size();
 	}
 
 	Vec3 rnd_point(const Point3& origin) const override {
-		// TODO can this not invoke MixturePDF?
-		// TODO this segfaults if objects is empty!!
-		return objects[rnd_int(0, objects.size() - 1)]->rnd_point(origin);
+		return rnd_item(objects)->rnd_point(origin);
 	}
 
   private:

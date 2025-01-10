@@ -149,7 +149,7 @@ class Mat3 : public Triple<Vec3, Mat3> {
 	Mat3 inv() const {
 		double determinant = det();
 		if (std::fabs(determinant) < NEAR_0_TOL)
-			throw std::domain_error("Attempt to invert singular matrix");
+			throw std::domain_error("Cannot invert singular matrix.");
 		return Mat3(cross(col(1), col(2)), cross(col(2), col(0)), cross(col(0), col(1))) / determinant;
 	}
 

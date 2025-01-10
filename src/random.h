@@ -3,6 +3,9 @@
 
 #include <cstdlib>
 #include <cmath>
+#include <vector>
+#include <initializer_list>
+#include <stdexcept>
 
 #include "linalg.h"
 #include "hittable.h"
@@ -38,6 +41,18 @@ inline double rnd_double(double min, double max) {
  */
 inline int rnd_int(int min, int max) {
 	return int(rnd_double(min, max + 1));
+}
+
+/**
+ * Get random item from given list.
+ *
+ * @param items list (vector) of items from which to draw
+ * @returns random uniformly-selected item from given list
+ */
+template <typename T>
+inline T rnd_item(const std::vector<T>& items) {
+	if (items.size() == 0) throw std::runtime_error("Cannot draw random item from empty list.");
+	return items[rnd_int(0, items.size() - 1)];
 }
 
 /* --- random vector utility functions ---------------------------------------------------------- */
@@ -113,21 +128,22 @@ class SpherePDF {
 
 class MixturePDF : public SpherePDF {
   public:
-	// TODO allow more than two PDFs?
-	MixturePDF(shared_ptr<SpherePDF> p0, shared_ptr<SpherePDF> p1) : p{p0, p1} {}
+	MixturePDF(std::initializer_list<shared_ptr<SpherePDF>> pdfs) : pdfs(pdfs) {}
+
+	void add(shared_ptr<SpherePDF> pdf) { pdfs.push_back(pdf); }
 
 	double density(const Vec3& direction) const override {
-		// TODO allow variable relative weightings?
-		return 0.5 * (p[0]->density(direction) + p[1]->density(direction));
+		if (pdfs.size() == 0) throw std::runtime_error("No PDFs in mixture to linearly combine.");
+
+		double sum = 0;
+		for (const auto& pdf : pdfs) sum += pdf->density(direction);
+		return sum / pdfs.size();
 	}
 
-	Vec3 sample() const override {
-		if (rnd_double() < 0.5) return p[0]->sample();
-		return p[1]->sample();
-	}
+	Vec3 sample() const override { return rnd_item(pdfs)->sample(); }
 
   private:
-	shared_ptr<SpherePDF> p[2];
+	std::vector<shared_ptr<SpherePDF>> pdfs;
 };
 
 /* --- assorted PDFs on unit sphere ------------------------------------------------------------- */

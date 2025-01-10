@@ -14,7 +14,7 @@ void register_interrupt_handler();
 
 /* --- scene selection -------------------------------------------------------------------------- */
 
-#include "scenes/07_cornell_box.inc"
+#include "scenes/01_bouncing_spheres.inc"
 
 #ifndef SCENE_INC // default to empty scene if none is loaded
 void build_scene(HittableList&, HittableList&, Camera&) {}

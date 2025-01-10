@@ -44,7 +44,7 @@ class Camera {
 		background = [bg](const Ray&) { return bg; };
 	}
 
-	void render(const Hittable& scene, const Hittable& lights, int start_pixel=0) {
+	void render(const Hittable& scene, const HittableList& lights, int start_pixel=0) {
 		initialize(start_pixel);
 
 		ThreadPool pool;
@@ -171,7 +171,7 @@ class Camera {
 	 * @param depth  maximum recursion depth (number of scattered rays followed)
 	 * @returns color acquired by ray along its path through scene
 	 */
-	Color ray_color(const Hittable& scene, const Hittable& lights, const Ray& r, int depth) const {
+	Color ray_color(const Hittable& scene, const HittableList& lights, const Ray& r, int depth) const {
 		if (depth <= 0) return black;
 
 		HitRecord rec;
@@ -192,7 +192,8 @@ class Camera {
 		if (!srec.pdf) { // use hard-coded scattered ray
 			scattered = srec.override_ray;
 		} else { // sample scattered ray direction from PDF
-			MixturePDF mixed_pdf(make_shared<HittablePDF>(lights, rec.p), srec.pdf);
+			MixturePDF mixed_pdf{srec.pdf};
+			if (lights.objects.size() > 0) mixed_pdf.add(make_shared<HittablePDF>(lights, rec.p));
 			scattered = Ray(rec.p, mixed_pdf.sample(), r.time());
 
 			double sample_pdf_val = mixed_pdf.density(scattered.direction());
@@ -220,7 +221,7 @@ class Camera {
 	 * @returns sum of colors returned by all rays fired
 	 */
 	Color sample_pixel(
-		const Hittable& scene, const Hittable& lights, int i, int j, int subpixel, int samples
+		const Hittable& scene, const HittableList& lights, int i, int j, int subpixel, int samples
 	) {
 		Color color_sum = black;
 		for (int sp = subpixel; sp < subpixel + samples; sp++) {
