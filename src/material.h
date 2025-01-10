@@ -77,7 +77,7 @@ class Lambertian : public Material { // aka. matte material
 	}
 
 	double scatter_pdf(const Ray&, const HitRecord& rec, const Ray& scattered) const override {
-		// TODO WHAT IS THIS METHOD DOING HERE ANY MORE? WHY DOES THIS NOT JUST INVOKE CosinePDF::density()??
+		// TODO What is this method doing here? Why not invoke CosinePDF::density()??
 		// If we remove it, remember to remove the constant PI from above
 		auto cos_theta = dot(rec.normal, scattered.direction().unit());
 		return cos_theta < 0 ? 0 : cos_theta / PI;
@@ -193,7 +193,7 @@ class Isotropic : public Material { // aka. smoke
 	}
 
 	double scatter_pdf(const Ray&, const HitRecord&, const Ray&) const override {
-		// TODO WHAT IS THIS METHOD DOING HERE ANY MORE? WHY DOES THIS NOT JUST INVOKE UniformPDF::density()??
+		// TODO What is this method doing here? Why not invoke UniformPDF::density()??
 		return 1 / (4 * PI);
 	}
 

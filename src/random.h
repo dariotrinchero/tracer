@@ -75,18 +75,6 @@ inline Vec3 rnd_unit_vec() {
 }
 
 /**
- * Generate random vector uniformly-distributed on unit hemisphere lying on the same side
- * of the plane with given normal as that normal.
- *
- * @param normal the normal to plane bisecting unit sphere
- * @returns random unit vector having positive dot product with given normal
- */
-inline Vec3 rnd_vec_hemisphere(const Vec3& normal) {
-	Vec3 r = rnd_unit_vec();
-	return dot(r, normal) > 0 ? r : -r;
-}
-
-/**
  * Generate (by rejection sampling) random vector uniformly-distributed within unit disk
  * on xy-plane.
  *
@@ -97,21 +85,6 @@ inline Vec3 rnd_vec_unit_disk() {
 		Vec3 r = Vec3(rnd_double(-1, 1), rnd_double(-1, 1), 0);
 		if (r.length_squared() < 1.0) return r;
 	}
-}
-
-/**
- * Generate (by inverse transform sampling) random unit vector, distributed according to
- * PDF, p(v) = cos(theta)/pi, for unit vector v, and angle theta between v & the z-axis.
- * This is the scattering distribution of a Lambertian material.
- *
- * @returns random unit vector with cosine distribution centered on z-axis
- */
-inline Vec3 rnd_cosine_direction() {
-	double phi = 2 * PI * rnd_double();
-	double r2 = rnd_double();
-	double sqrt_r2 = std::sqrt(r2);
-	Vec3 direction(std::cos(phi) * sqrt_r2, std::sin(phi) * sqrt_r2, std::sqrt(1 - r2));
-	return direction.near_zero() ? Vec3(1, 0, 0) : direction;
 }
 
 /* --- superclass for PDF on unit sphere -------------------------------------------------------- */
@@ -163,22 +136,17 @@ class UniformPDF : public SpherePDF {
   public:
 	UniformPDF() {}
 
-	double density(const Vec3&) const override {
-		return 1 / (4 * PI);
-	}
-
-	Vec3 sample() const override {
-		return rnd_unit_vec();
-	}
+	double density(const Vec3&) const override { return 1 / (4 * PI); }
+	Vec3 sample() const override { return rnd_unit_vec(); }
 };
 
-// TODO document this; see rnd_cosine_direction() above
-// TODO maybe delete utility function above entirely, if it is only called here?
+/**
+ * PDF given by p(v)=cos(theta)/pi, for angle theta between unit vector v & fixed axis w.
+ * This is the scattering distribution of a Lambertian material.
+ */
 class CosinePDF : public SpherePDF {
   public:
-	CosinePDF(const Vec3& w) {
-		onb = Mat3::orthog(w);
-	}
+	CosinePDF(const Vec3& w) : onb(Mat3::orthog(w)) {}
 
 	double density(const Vec3& direction) const override {
 		auto cos_theta = dot(direction.unit(), onb.col(2));
@@ -186,28 +154,35 @@ class CosinePDF : public SpherePDF {
 	}
 
 	Vec3 sample() const override {
-		return onb * rnd_cosine_direction();
+		double phi = 2 * PI * rnd_double();
+		double r2 = rnd_double();
+		double sqrt_r2 = std::sqrt(r2);
+		Vec3 direction(std::cos(phi) * sqrt_r2, std::sin(phi) * sqrt_r2, std::sqrt(1 - r2));
+		return onb * (direction.near_zero() ? Vec3(1, 0, 0) : direction);
 	}
 
   private:
 	Mat3 onb;
 };
 
-// TODO document this
+/**
+ * PDF induced on unit sphere of directions by having them face towards a uniformly-
+ * distributed random point on given Hittable object (that is visible from given origin).
+ */
 class HittablePDF : public SpherePDF {
   public:
-	HittablePDF(const Hittable& objects, const Point3& origin) : objects(objects), origin(origin) {}
+	HittablePDF(const Hittable& obj, const Point3& origin) : obj(obj), origin(origin) {}
 
 	double density(const Vec3& direction) const override {
-		return objects.pdf_value(origin, direction);
+		return obj.pdf_value(origin, direction);
 	}
 
 	Vec3 sample() const override {
-		return objects.rnd_point(origin);
+		return obj.rnd_point(origin);
 	}
 
   private:
-	const Hittable& objects;
+	const Hittable& obj;
 	Point3 origin;
 };
 
@@ -273,6 +248,12 @@ class Perlin {
 	Vec3 rand_vec[point_count];
 	int perm_x[point_count], perm_y[point_count], perm_z[point_count];
 
+	/**
+	 * Generate permutation of length point_count; ie. an array with random ordering of
+	 * {0, 1, 2, ..., point_count-1}.
+	 *
+	 * @param[out] p pointer to array to populate with permutation
+	 */
 	static void perlin_generate_perm(int* p) {
 		for (int i = 0; i < point_count; i++) p[i] = i;
 

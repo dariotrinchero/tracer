@@ -74,7 +74,7 @@ class ImageTexture : public Texture {
 		v = 1 - uv_range.clamp(v); // flip v to img coords
 
 		int i = int(u * img.width()), j = int(v * img.height());
-		return img.pixel(i, j).to_linear(gamma); // scattering attenuation needs linear color
+		return img.pixel(i, j).to_linear(gamma); // scattering logic needs linear color
 	}
 
   private:
