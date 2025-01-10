@@ -22,21 +22,18 @@ class Texture {
 	virtual Color value(double u, double v, const Point3& p) const = 0;
 };
 
+/* --- assorted textures ------------------------------------------------------------------------ */
+
 class SolidColor : public Texture {
   public:
 	SolidColor(const Color& albedo) : albedo(albedo) {}
-
 	SolidColor(double r, double g, double b) : SolidColor(Color(r, g, b)) {}
 
-	Color value(double, double, const Point3&) const override {
-		return albedo;
-	}
+	Color value(double, double, const Point3&) const override { return albedo; }
 
   private:
 	Color albedo;
 };
-
-/* --- assorted textures ------------------------------------------------------------------------ */
 
 class CheckerTexture : public Texture {
   public:

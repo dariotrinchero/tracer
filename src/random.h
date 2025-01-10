@@ -137,6 +137,7 @@ class UniformPDF : public SpherePDF {
 	UniformPDF() {}
 
 	double density(const Vec3&) const override { return 1 / (4 * PI); }
+
 	Vec3 sample() const override { return rnd_unit_vec(); }
 };
 
@@ -177,9 +178,7 @@ class HittablePDF : public SpherePDF {
 		return obj.pdf_value(origin, direction);
 	}
 
-	Vec3 sample() const override {
-		return obj.rnd_point(origin);
-	}
+	Vec3 sample() const override { return obj.rnd_point(origin); }
 
   private:
 	const Hittable& obj;

@@ -77,12 +77,51 @@ class AABB {
 
 /* --- bounding box operations ------------------------------------------------------------------ */
 
+/**
+ * Translate bounding box by offset vector.
+ *
+ * @param bbox   bounding box to translate
+ * @param offset vector by which to offset bounding box
+ * @returns new bounding box with all vertices offset
+ */
 inline AABB operator+(const AABB& bbox, const Vec3& offset) {
 	return AABB(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
 }
 
+/**
+ * Translate bounding box by offset vector.
+ *
+ * @overload
+ */
 inline AABB operator+(const Vec3& offset, const AABB& bbox) {
 	return bbox + offset;
+}
+
+/**
+ * Transform bounding box by general linear transformation.
+ *
+ * @param trns matrix giving transformation to apply
+ * @param bbox bounding box to transform
+ * @returns new axis-aligned bounding box enclosing the image of bbox under transformation
+ */
+inline AABB operator*(const Mat3& trns, const AABB& bbox) {
+	Point3 min(infinity, infinity, infinity);
+	Point3 max(-infinity, -infinity, -infinity);
+
+	for (auto x : { bbox.x.min, bbox.x.max }) {
+		for (auto y : { bbox.y.min, bbox.y.max }) {
+			for (auto z : { bbox.z.min, bbox.z.max }) {
+				Vec3 tester = trns * Vec3(x, y, z);
+
+				for (int c = 0; c < 3; c++) {
+					min[c] = std::fmin(min[c], tester[c]);
+					max[c] = std::fmax(max[c], tester[c]);
+				}
+			}
+		}
+	}
+
+	return AABB(min, max);
 }
 
 /* --- global constants ------------------------------------------------------------------------- */

@@ -157,15 +157,19 @@ class HittableList : public Hittable {
 // into a single transform, like we currently do with sequences of just transforms
 class Translate : public Hittable {
   public:
-	Translate(shared_ptr<Hittable> object, const Vec3& offset) : object(object), offset(offset) {
+	Translate(shared_ptr<Hittable> obj, const Vec3& shift) : object(obj), offset(shift) {
 		bbox = object->bounding_box() + offset;
+
+		// check if object is a Translate; if so, unwrap it & add offsets
+		if (auto inner_translate = std::dynamic_pointer_cast<Translate>(object)) {
+			offset += inner_translate->offset;
+			object = inner_translate->object;
+		}
 	}
 
 	bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
-		// transform ray from world to object space
-		Ray shifted(r.source() - offset, r.direction(), r.time());
-
 		// find intersection in object space
+		Ray shifted(r.source() - offset, r.direction(), r.time());
 		if (!object->hit(shifted, ray_t, rec)) return false;
 
 		// transform intersection back to world space
@@ -188,27 +192,8 @@ class Transform : public Hittable {
 
 		try {
 			trns_inv = trns.inv();
-
-			// transform bounding box
-			Point3 min(infinity, infinity, infinity);
-			Point3 max(-infinity, -infinity, -infinity);
-
-			for (auto x : { bbox.x.min, bbox.x.max }) {
-				for (auto y : { bbox.y.min, bbox.y.max }) {
-					for (auto z : { bbox.z.min, bbox.z.max }) {
-						Vec3 tester = trns * Vec3(x, y, z);
-
-						for (int c = 0; c < 3; c++) {
-							min[c] = std::fmin(min[c], tester[c]);
-							max[c] = std::fmax(max[c], tester[c]);
-						}
-					}
-				}
-			}
-
-			bbox = AABB(min, max);
-		} catch (std::domain_error&) {
-			// gracefully ignore singular transformations
+			bbox = trns * bbox;
+		} catch (std::domain_error&) { // gracefully ignore singular matrix
 			std::cerr << "WARNING: Ignoring singular transformation by matrix:\n" << trns << '\n';
 			trns = Mat3::id();
 			trns_inv = Mat3::id();
@@ -220,16 +205,13 @@ class Transform : public Hittable {
 			trns_inv = inner_transform->trns_inv * trns_inv;
 			object = inner_transform->object;
 		}
-
 	}
 
 	bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
-		// transform ray from world to object space
+		// find intersection in object space
 		auto src = trns_inv * r.source();
 		auto dir = trns_inv * r.direction();
 		Ray transformed_r(src, dir, r.time());
-
-		// find intersection in object space
 		if (!object->hit(transformed_r, ray_t, rec)) return false;
 
 		// transform intersection back to world space
