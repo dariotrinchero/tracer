@@ -18,7 +18,12 @@ template <typename... Args> inline void unused(Args&&...) {}
 
 // signatures from material.h & random.h
 class Material;
-template <typename T> inline T rnd_item(const std::vector<T>& items);
+
+template <typename T>
+inline T rnd_item(const std::vector<T>& items);
+
+template <typename T, typename Callable>
+inline double average(const std::vector<T>& items, const Callable&& f);
 
 /* --- container for intersection data ---------------------------------------------------------- */
 
@@ -135,13 +140,9 @@ class HittableList : public Hittable {
 	AABB bounding_box() const override { return bbox; }
 
 	double pdf_value(const Point3& origin, const Vec3& direction) const override {
-		// TODO can this not be unified with MixturePDF::density()? It duplicates much code.
-		if (objects.size() == 0)
-			throw std::runtime_error("No Hittables in list to obtain PDF value.");
-
-		double sum = 0;
-		for (const auto& obj : objects) sum += obj->pdf_value(origin, direction);
-		return sum / objects.size();
+		return average(objects, [origin, direction] (shared_ptr<Hittable> obj) {
+			return obj->pdf_value(origin, direction);
+		});
 	}
 
 	Vec3 rnd_point(const Point3& origin) const override {

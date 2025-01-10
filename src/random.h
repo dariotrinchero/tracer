@@ -6,6 +6,7 @@
 #include <vector>
 #include <initializer_list>
 #include <stdexcept>
+#include <functional>
 
 #include "linalg.h"
 #include "hittable.h"
@@ -53,6 +54,23 @@ template <typename T>
 inline T rnd_item(const std::vector<T>& items) {
 	if (items.size() == 0) throw std::runtime_error("Cannot draw random item from empty list.");
 	return items[rnd_int(0, items.size() - 1)];
+}
+
+/**
+ * Average outputs of given function over items of given list. Helper function for
+ * MixturePDF class below, as well as HittableList.
+ *
+ * @param items list (vector) of items on which to call function
+ * @param f     function (or callable) to evaluate on each item in list
+ * @returns sum of outputs of f, divided by number of items in list
+ */
+template <typename T, typename Callable>
+inline double average(const std::vector<T>& items, const Callable&& f) {
+	if (items.size() == 0) throw std::runtime_error("Cannot average over empty list.");
+
+	double sum = 0;
+	for (const auto& item : items) sum += f(item);
+	return sum / items.size();
 }
 
 /* --- random vector utility functions ---------------------------------------------------------- */
@@ -133,11 +151,9 @@ class MixturePDF : public SpherePDF {
 	void add(shared_ptr<SpherePDF> pdf) { pdfs.push_back(pdf); }
 
 	double density(const Vec3& direction) const override {
-		if (pdfs.size() == 0) throw std::runtime_error("No PDFs in mixture to linearly combine.");
-
-		double sum = 0;
-		for (const auto& pdf : pdfs) sum += pdf->density(direction);
-		return sum / pdfs.size();
+		return average(pdfs, [direction] (shared_ptr<SpherePDF> pdf) {
+			return pdf->density(direction);
+		});
 	}
 
 	Vec3 sample() const override { return rnd_item(pdfs)->sample(); }
