@@ -1,5 +1,6 @@
 bin
-renders
+renders/*
+!renders/12_dragon.jpg
 
 ### C++ ###
 # Prerequisites

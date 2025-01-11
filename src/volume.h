@@ -1,5 +1,4 @@
-#ifndef VOLUME_H
-#define VOLUME_H
+#pragma once
 
 #include "hittable.h"
 #include "material.h"
@@ -51,5 +50,3 @@ class ConstantMedium : public Hittable {
 	double               neg_inv_density;
 	shared_ptr<Material> phase_function;
 };
-
-#endif

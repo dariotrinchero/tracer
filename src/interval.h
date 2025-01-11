@@ -1,5 +1,4 @@
-#ifndef INTERVAL_H
-#define INTERVAL_H
+#pragma once
 
 #include <limits>
 
@@ -45,7 +44,7 @@ class Interval {
 	static const Interval empty, universe, unit;
 };
 
-/* --- global constants ------------------------------------------------------------------------- */
+/* --- interval operations ---------------------------------------------------------------------- */
 
 inline Interval operator+(const Interval& ivl, double displacement) {
 	return Interval(ivl.min + displacement, ivl.max + displacement);
@@ -61,5 +60,3 @@ const double infinity = std::numeric_limits<double>::infinity();
 const Interval Interval::empty = Interval();
 const Interval Interval::universe = Interval(-infinity, infinity);
 const Interval Interval::unit = Interval(0, 1);
-
-#endif

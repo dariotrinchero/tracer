@@ -1,5 +1,4 @@
-#ifndef HITTABLE_H
-#define HITTABLE_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -228,5 +227,3 @@ class Rotate : public Transform {
 	Rotate(shared_ptr<Hittable> obj, Axis axis, double angle)
 		: Transform(obj, Mat3::rotate(axis, angle)) {}
 };
-
-#endif

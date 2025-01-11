@@ -40,7 +40,6 @@ void build_scene(HittableList& scene, HittableList& lights, Camera& cam) {
 	cam.subpixel_grid_size = 14;
 	cam.max_depth          = 50;
 
-	cam.vert_fov = 40;
 	cam.center   = Point3(278, 278, -800);
 	cam.facing   = Point3(278, 278, 0);
 }

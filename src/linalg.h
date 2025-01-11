@@ -1,5 +1,4 @@
-#ifndef LINALG_H
-#define LINALG_H
+#pragma once
 
 #include <cmath>
 #include <iostream>
@@ -229,5 +228,3 @@ inline Vec3 operator*(const Mat3& m, const Vec3& v) {
 inline Mat3 operator*(const Mat3& m, const Mat3& n) {
 	return Mat3::from_cols(m * n.col(0), m * n.col(1), m * n.col(2));
 }
-
-#endif
