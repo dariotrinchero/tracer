@@ -1,8 +1,6 @@
 #include <stdexcept>
 #include <csignal>
 
-#include "hittable.h"
-#include "material.h"
 #include "camera.h"
 #include "sphere.h"
 #include "shape2d.h"
@@ -25,30 +23,19 @@ void build_scene(HittableList&, HittableList&, Camera&) {}
 int main(int argc, char* argv[]) {
 	register_interrupt_handler();
 
-	// set up default camera
 	Camera cam;
-	cam.aspect_ratio = 16.0 / 9.0;
-	cam.vert_fov = 20;
-	cam.center = Point3(0, 0, 1);
-	cam.facing = Point3(0, 0, 0);
-	cam.v_up = Vec3(0, 1, 0);
-#ifdef DEBUG_TRACER // fast low quality render
-	cam.image_width = 400;
-	cam.subpixel_grid_size = 10;
-	cam.max_depth = 40;
-#else // slow high quality render
+	HittableList scene, lights;
+
+#ifndef DEBUG_TRACER // default settings for high-quality render
 	cam.image_width = 1200;
 	cam.subpixel_grid_size = 23;
 	cam.max_depth = 50;
 #endif
 
-	// build scene
-	HittableList scene;
-	HittableList lights;
+	// build scene & render
 	build_scene(scene, lights, cam);
 	BVHNode scene_tree(scene);
 
-	// begin render
 	int start_pixel = 0;
 	if (argc > 1) { // resume prior render if start pixel given
 		try {
@@ -59,6 +46,7 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 	}
+
 	cam.render(scene_tree, lights, start_pixel);
 }
 

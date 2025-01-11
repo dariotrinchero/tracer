@@ -1,5 +1,4 @@
-#ifndef IMAGE_H
-#define IMAGE_H
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -138,5 +137,3 @@ class PPMImage {
 		return line;
 	}
 };
-
-#endif

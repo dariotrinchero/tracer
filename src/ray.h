@@ -1,5 +1,4 @@
-#ifndef RAY_H
-#define RAY_H
+#pragma once
 
 #include "linalg.h"
 
@@ -26,5 +25,3 @@ class Ray {
 	Vec3   dir;
 	double tm;
 };
-
-#endif

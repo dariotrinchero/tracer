@@ -1,5 +1,4 @@
-#ifndef RANDOM_H
-#define RANDOM_H
+#pragma once
 
 #include <cstdlib>
 #include <cmath>
@@ -315,5 +314,3 @@ class Perlin {
 		return accum;
 	}
 };
-
-#endif

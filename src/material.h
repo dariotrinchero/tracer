@@ -1,5 +1,4 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#pragma once
 
 #include <cmath>
 
@@ -175,5 +174,3 @@ class Isotropic : public Material { // aka. smoke
   private:
 	shared_ptr<Texture> tex;
 };
-
-#endif

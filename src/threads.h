@@ -1,5 +1,4 @@
-#ifndef THREADS_H
-#define THREADS_H
+#pragma once
 
 #include <vector>
 #include <queue>
@@ -80,5 +79,3 @@ class ThreadPool {
 	std::atomic<bool>                 pool_stopping; // flag indicating pool is stopping
 	std::condition_variable           condition; // notifies workers of changes to queue or stop flag
 };
-
-#endif

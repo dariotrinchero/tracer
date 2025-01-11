@@ -69,11 +69,14 @@ void build_scene(HittableList& scene, HittableList& lights, Camera& cam) {
 	// camera settings
 	cam.aspect_ratio       = 1.0;
 	cam.image_width        = 800;
+#ifdef DEBUG_TRACER
 	cam.subpixel_grid_size = 5;
-	cam.max_depth          = 40;
+#else
+	cam.subpixel_grid_size = 100;
+#endif
+
 	cam.set_solid_bg(black);
 
-	cam.vert_fov = 40;
 	cam.center   = Point3(478, 278, -600);
 	cam.facing   = Point3(278, 278, 0);
 	cam.shutter_speed = 1.0;

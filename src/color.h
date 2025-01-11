@@ -1,5 +1,4 @@
-#ifndef COLOR_H
-#define COLOR_H
+#pragma once
 
 #include <iostream>
 #include <cmath>
@@ -65,5 +64,3 @@ inline Color operator*(const Color& col1, const Color& col2) {
 
 const Color white(1, 1, 1);
 const Color black(0, 0, 0);
-
-#endif
