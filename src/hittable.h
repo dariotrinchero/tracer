@@ -153,73 +153,47 @@ class HittableList : public Hittable {
 	AABB bbox;
 };
 
-/* --- affine transformations ------------------------------------------------------------------- */
-
-// TODO unify with other transformations by using 4x4 matrices & length 4 vectors instead
-// see pg 16+ of https://web.cs.hacettepe.edu.tr/~erkut/bco511.s12/w04-transformations.pdf
-// This will allow us to squash a sequence: transform > translate > transform
-// into a single transform, like we currently do with sequences of just transforms
-class Translate : public Hittable {
-  public:
-	Translate(shared_ptr<Hittable> obj, const Vec3& shift) : object(obj), offset(shift) {
-		bbox = object->bounding_box() + offset;
-
-		// check if object is a Translate; if so, unwrap it & add offsets
-		if (auto inner_translate = std::dynamic_pointer_cast<Translate>(object)) {
-			offset += inner_translate->offset;
-			object = inner_translate->object;
-		}
-	}
-
-	bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
-		// find intersection in object space
-		Ray shifted(r.source() - offset, r.direction(), r.time());
-		if (!object->hit(shifted, ray_t, rec)) return false;
-
-		// transform intersection back to world space
-		rec.p += offset;
-		return true;
-	}
-
-	AABB bounding_box() const override { return bbox; }
-
-  private:
-	shared_ptr<Hittable> object;
-	Vec3 offset;
-	AABB bbox;
-};
+/* --- general affine transformations ----------------------------------------------------------- */
 
 class Transform : public Hittable {
   public:
-	Transform(shared_ptr<Hittable> obj, const Mat3& t) : object(obj), trns(t) {
-		bbox = object->bounding_box();
-
+	Transform(shared_ptr<Hittable> obj, const Mat3& lin, const Vec3& shift)
+		: object(obj), trns(lin), offset(shift)
+	{
 		try {
 			trns_inv = trns.inv();
-			bbox = trns * bbox;
 		} catch (std::domain_error&) { // gracefully ignore singular matrix
 			std::cerr << "WARNING: Ignoring singular transformation by matrix:\n" << trns << '\n';
 			trns = Mat3::id();
 			trns_inv = Mat3::id();
 		}
 
-		// check if object is a Transform; if so, unwrap it & multiply matrices
+		bbox = trns * object->bounding_box() + offset;
+
+		// check if object is a Transform; if so, combine matrices & offsets
 		if (auto inner_transform = std::dynamic_pointer_cast<Transform>(object)) {
+			offset = trns * inner_transform->offset + offset;
 			trns = trns * inner_transform->trns;
 			trns_inv = inner_transform->trns_inv * trns_inv;
 			object = inner_transform->object;
 		}
 	}
 
+	Transform(shared_ptr<Hittable> obj, const Mat3& lin)
+		: Transform(obj, lin, Vec3()) {}
+
+	Transform(shared_ptr<Hittable> obj, const Vec3& shift)
+		: Transform(obj, Mat3::id(), shift) {}
+
 	bool hit(const Ray& r, Interval ray_t, HitRecord& rec) const override {
 		// find intersection in object space
-		auto src = trns_inv * r.source();
+		auto src = trns_inv * (r.source() - offset);
 		auto dir = trns_inv * r.direction();
 		Ray transformed_r(src, dir, r.time());
 		if (!object->hit(transformed_r, ray_t, rec)) return false;
 
 		// transform intersection back to world space
-		rec.p = trns * rec.p;
+		rec.p = trns * rec.p + offset;
 		rec.normal = trns_inv.transpose() * rec.normal; // cf. "surface normal transformation"
 		return true;
 	}
@@ -229,7 +203,15 @@ class Transform : public Hittable {
   private:
 	shared_ptr<Hittable> object;
 	Mat3 trns, trns_inv;
+	Vec3 offset;
 	AABB bbox;
+};
+
+/* --- assorted transformations ----------------------------------------------------------------- */
+
+class Translate : public Transform {
+  public:
+	Translate(shared_ptr<Hittable> obj, const Vec3& shift) : Transform(obj, shift) {}
 };
 
 class Scale : public Transform {
