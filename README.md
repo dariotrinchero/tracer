@@ -4,9 +4,7 @@ This is a minimal (unoptimized, feature-sparse) from-scratch implementation of a
 [Ray Tracing in One Weekend](https://raytracing.github.io/) by Peter Shirley, Trevor David Black, and Steve Hollasch. There are, however, a few additional
 features implemented in this version (outlined below), as well as a few minor divergences in implementation and code style.
 
-## Demo renders
-
-TODO: add best renders here
+![demo render of dragon](renders/12_dragon.jpg)
 
 ## Compilation
 
@@ -23,7 +21,11 @@ Scenes are defined in `.inc` files, located in `src/scenes`. Each scene file sho
 ```c++
 void build_scene(HittableList& scene, HittableList& lights, Camera& cam);
 ```
-in which the scene is populated and the camera configured.
+in which the scene is populated and the camera configured. The scene is then selected by including the appropriate file
+in `tracer.cc`, such as
+```c++
+#include "scenes/01_bouncing_spheres.inc"
+```
 
 Notable scenes included in this project are
 
@@ -38,7 +40,7 @@ In addition to the features covered in the Ray Tracing in One Weekend Series, th
 - basic multithreading (see `src/threads.h`)
 - ability to resume interrupted renders (see the interrupt handler in `src/tracer.cc`)
 - additional 2D primitives (see `src/shape2d.h`)
-- general matrix transformations (see `src/hittable.h` and `src/linalg.h`)
+- general affine transformations (see `src/hittable.h` and `src/linalg.h`)
 - STL mesh loading (see `src/mesh.h`)
 - from-scratch PPM image loading (see `src/image.h`)
 - more documentation; cleaner, more generic APIs

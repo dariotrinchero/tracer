@@ -1,5 +1,4 @@
-#ifndef SPHERE_H
-#define SPHERE_H
+#pragma once
 
 #include <cmath>
 
@@ -103,5 +102,3 @@ class Sphere : public Hittable {
 		v = std::acos(-p.y()) / PI;
 	}
 };
-
-#endif

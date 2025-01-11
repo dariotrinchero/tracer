@@ -1,5 +1,4 @@
-#ifndef AABB_H
-#define AABB_H
+#pragma once
 
 #include "interval.h"
 #include "ray.h"
@@ -128,5 +127,3 @@ inline AABB operator*(const Mat3& trns, const AABB& bbox) {
 
 const AABB AABB::empty = AABB(Interval::empty, Interval::empty, Interval::empty);
 const AABB AABB::universe = AABB(Interval::universe, Interval::universe, Interval::universe);
-
-#endif

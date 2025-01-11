@@ -10,6 +10,7 @@ void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	scene.add(top_sphere);
 	scene.add(make_shared<Sphere>(Point3(0, -1000, 0), 1000, make_shared<Lambertian>(pertext)));
 	cam.center = Point3(17, 3.5, 3);
+	cam.vert_fov = 20;
 }
 
 #endif

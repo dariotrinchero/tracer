@@ -1,5 +1,4 @@
-#ifndef SHAPE2D_H
-#define SHAPE2D_H
+#pragma once
 
 #include <cmath>
 
@@ -196,5 +195,3 @@ inline shared_ptr<HittableList> debug_bbox(shared_ptr<Hittable> obj) {
 	return box(Point3(x.min, y.min, z.min), Point3(x.max, y.max, z.max),
 		make_shared<Lambertian>(make_shared<ImageTexture>("bbox.ppm")));
 }
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef MESH_H
-#define MESH_H
+#pragma once
 
 #include <iostream>
 #include <fstream>
@@ -106,5 +105,3 @@ class Mesh {
 		return true;
 	}
 };
-
-#endif

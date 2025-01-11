@@ -1,5 +1,4 @@
-#ifndef BVH_H
-#define BVH_H
+#pragma once
 
 #include <algorithm>
 
@@ -57,5 +56,3 @@ class BVHNode : public Hittable {
 		};
 	}
 };
-
-#endif

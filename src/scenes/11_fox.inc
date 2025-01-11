@@ -13,7 +13,6 @@ void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	// camera
 	cam.center = Point3(-20, 100, -220);
 	cam.facing = Point3(-10, 50, 0);
-	cam.vert_fov = 40;
 }
 
 #endif

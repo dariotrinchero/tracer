@@ -8,6 +8,7 @@ void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	earth = make_shared<Rotate>(earth, Axis::Y, -90 * PI / 180);
 	scene.add(earth);
 	cam.center = Point3(0, 0, 12);
+	cam.vert_fov = 20;
 }
 
 #endif

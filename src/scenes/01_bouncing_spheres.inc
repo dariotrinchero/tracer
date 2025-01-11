@@ -47,6 +47,7 @@ void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	cam.defocus_angle = 0.6;
 	cam.focus_dist = 10;
 	cam.shutter_speed = 1.0;
+	cam.vert_fov = 20;
 }
 
 #endif

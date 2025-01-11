@@ -14,10 +14,8 @@ void build_scene(HittableList& scene, HittableList&, Camera& cam) {
 	cam.center = Point3(150, 270, 70);
 	cam.facing = Point3(90, 0, 0);
 	cam.v_up = Vec3(1, 0, 0);
-	cam.vert_fov = 40;
 
-#ifdef DEBUG_TRACER
-	// really low-fidelity debug, as render is slow
+#ifdef DEBUG_TRACER // really low-fidelity debug, as render is slow
 	cam.subpixel_grid_size = 3;
 	cam.max_depth = 3;
 #endif

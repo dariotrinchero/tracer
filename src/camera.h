@@ -1,5 +1,4 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #include <iostream>
 #include <cmath>
@@ -16,18 +15,18 @@ using BgFn = std::function<Color(const Ray&)>;
 class Camera {
   public:
 	// image geometry
-	double aspect_ratio       = 1.0;
-	int    image_width        = 100;
-	double vert_fov           = 90;                // vertical FOV (deg)
+	double aspect_ratio       = 16.0 / 9.0;
+	int    image_width        = 400;
+	double vert_fov           = 40;                // vertical FOV (deg)
 
 	// camera positioning
-	Point3 center             = Point3(0, 0, 0);   // camera center location
-	Point3 facing             = Point3(0, 0, -1);  // direction faced by camera
+	Point3 center             = Point3(0, 0, 1);   // camera center location
+	Point3 facing             = Point3(0, 0, 0);   // direction faced by camera
 	Vec3   v_up               = Vec3(0, 1, 0);     // defines camera roll
 
 	// quality & performance
 	int    subpixel_grid_size = 10;                // sqrt of # rays per pixel
-	int    max_depth          = 10;                // max ray bounces
+	int    max_depth          = 40;                // max ray bounces
 
 	// aesthetic features
 	double gamma              = 2.0;
@@ -232,5 +231,3 @@ class Camera {
 		return color_sum;
 	}
 };
-
-#endif

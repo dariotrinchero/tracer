@@ -1,6 +1,6 @@
 # compiler flags
 DEBUG    = -ggdb
-OPTIMISE = -O0
+OPTIMISE = -O0 # -O0 is least optimized; -O2 is most
 WARNINGS = -Wall -Wextra -Wno-variadic-macros -Wno-overlength-strings -pedantic
 CFLAGS   = $(DEBUG) $(OPTIMISE) $(WARNINGS)
 DFLAGS   = -DDEBUG_MESH -DDEBUG_TRACER
