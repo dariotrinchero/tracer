@@ -45,6 +45,22 @@ In addition to the features covered in the Ray Tracing in One Weekend Series, th
 - from-scratch PPM image loading (see `src/image.h`)
 - more documentation; cleaner, more generic APIs
 
+## Limitations & future expansions
+
+Here are some features that are missing from the current implementation, which I would like to implement in the future (pull requests are welcome):
+
+- [constructive solid geometry](http://cosinekitty.com/raytrace/chapter14_set_operations.html) (unions, intersections, etc)
+- a glossy [bidirectional reflectance distribution function](https://en.wikipedia.org/wiki/Bidirectional_reflectance_distribution_function)
+- a torus primitive (this is algebraically tricky; ray intersections require
+  [solving a quartic](http://cosinekitty.com/raytrace/chapter13_torus.html))
+- non-convex volumes
+- PDFs for hittables other than spheres / parallelograms (boxes, other 2D primitives like ellipses);
+  this is needed for `Camera::render` to support these hittables as `lights`
+- general framework for motion in scene
+- PDF for sampling moving sphere
+- support for image formats other than `.ppm`
+- support for 3D model formats other than `.stl`
+
 ## Disclaimers
 
 None of the models in `models` or the images in `images` are included under the license of this repository. I do not
